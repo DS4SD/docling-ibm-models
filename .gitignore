@@ -1,0 +1,60 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Tmp files and directories
+stderr.*
+stdout.*
+*.tar
+test.sh
+OutputDecoder
+jobs.txt
+_std*.*
+tests/tmp/*
+runs/*
+*.onnx
+.DS_Store
+viz/
+
+# VIM
+*.swp
+*.swo
+*.bak
+
+# Environments
+.env
+.venv
+_venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+venv
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# checkpoint file for testing
+tests/test_data/model_artifacts/*.check
+tests/test_data/model_artifacts/*.json
+tests/test_data/model_artifacts/*.pt
+
+# test results
+tests/test_data/viz/

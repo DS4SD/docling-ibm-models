@@ -1,0 +1,66 @@
+[tool.poetry]
+name = "docling-ibm-models"
+version = "0.2.0"
+description = "This package contains the AI models used by the Docling PDF conversion package"
+authors = ["Nikos Livathinos <nli@zurich.ibm.com>", "Maxim Lysak <mly@zurich.ibm.com>", "Ahmed Nassar <ahn@zurich.ibm.com>", "Christoph Auer <cau@zurich.ibm.com>", "Michele Dolfi <dol@zurich.ibm.com>", "Peter Staar <taa@zurich.ibm.com>"]
+license = "MIT"
+readme = "README.md"
+keywords= ["docling", "convert", "document", "pdf", "layout model", "segmentation", "table structure", "table former"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX :: Linux",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3"
+]
+packages = [
+    { include = "docling_ibm_models" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+torch = "2.2.2"
+torchvision = "0.17.2"
+onnxruntime = "^1.16.2"
+numpy = "^1.24.4"
+lxml = "^4.9.1"
+jsonlines = "^3.1.0"
+Pillow = "^10.0.0"
+tqdm = "^4.64.0"
+apted = "^1.0.3"
+Distance = "^0.1.3"
+mean_average_precision = "^2021.4.26.0"
+opencv-python-headless = { version = "^4.9.0.80", markers = 'sys_platform=="linux"'}
+opencv-python = { version = "^4.9.0.80", markers = 'sys_platform!="linux"'}
+
+[tool.poetry.dev-dependencies]
+black = {extras = ["jupyter"], version = "^24.4.2"}
+pytest = "^7.2.2"
+pre-commit = "^3.7.1"
+mypy = "^1.10.1"
+isort = "^5.10.1"
+python-semantic-release = "^7.32.2"
+flake8 = "^6.0.0"
+pyproject-flake8 = "^6.0.0"
+pytest-xdist = "^3.3.1"
+pytest-flake8 = "^1.1.0"
+types-requests = "^2.31.0.2"
+flake8-pyproject = "^1.2.3"
+pylint = "^2.17.5"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 88
+py_version=311
