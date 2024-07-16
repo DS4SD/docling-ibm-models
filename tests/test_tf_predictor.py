@@ -564,9 +564,9 @@ def test_tf_predictor():
                         # Visualization:
                         for text_cell in response["text_cell_bboxes"]:
                             xc0 = text_cell["l"]
-                            yc0 = text_cell["b"]
+                            yc0 = text_cell["t"]
                             xc1 = text_cell["r"]
-                            yc1 = text_cell["t"]
+                            yc1 = text_cell["b"]
                             img1.rectangle(((xc0, yc0), (xc1, yc1)), outline="red")
 
                         x0 = response["bbox"]["l"] - 6
