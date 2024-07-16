@@ -17,8 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/setup-poetry
-      - name: Build and push docs
-        run: poetry run mkdocs gh-deploy --force
   code-checks:
     uses: ./.github/workflows/checks.yml
   pre-release-check:
