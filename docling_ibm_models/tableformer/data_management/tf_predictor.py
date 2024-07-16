@@ -437,10 +437,10 @@ class TFPredictor:
                 for pdf_cell in pdf_cells:
                     if pdf_cell["id"] == docling_item["cell_id"]:
                         text_cell_bbox = {
-                            "b": pdf_cell["bbox"][1],
+                            "b": pdf_cell["bbox"][3],
                             "l": pdf_cell["bbox"][0],
                             "r": pdf_cell["bbox"][2],
-                            "t": pdf_cell["bbox"][3],
+                            "t": pdf_cell["bbox"][1],
                             "token": pdf_cell["text"],
                         }
                         tf_cells_map[cell_key]["text_cell_bboxes"].append(
@@ -468,10 +468,10 @@ class TFPredictor:
                 for pdf_cell in pdf_cells:
                     if pdf_cell["id"] == docling_item["cell_id"]:
                         text_cell_bbox = {
-                            "b": pdf_cell["bbox"][1],
+                            "b": pdf_cell["bbox"][3],
                             "l": pdf_cell["bbox"][0],
                             "r": pdf_cell["bbox"][2],
-                            "t": pdf_cell["bbox"][3],
+                            "t": pdf_cell["bbox"][1],
                             "token": pdf_cell["text"],
                         }
                         tf_cells_map[cell_key]["text_cell_bboxes"].append(
