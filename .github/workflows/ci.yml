@@ -1,0 +1,18 @@
+name: "Run CI"
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+  push:
+    branches:
+      - "**"
+      - "!main"
+      - "!gh-pages"
+
+env:
+  # disable keyring (https://github.com/actions/runner-images/issues/6185):
+  PYTHON_KEYRING_BACKEND: keyring.backends.null.Keyring
+
+jobs:
+  code-checks:
+    uses: ./.github/workflows/checks.yml
