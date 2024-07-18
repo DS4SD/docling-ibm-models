@@ -21,7 +21,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 torch = "2.2.2"
 torchvision = "0.17.2"
 onnxruntime = "^1.16.2"
@@ -57,13 +57,13 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 88
-target-version = ["py311"]
+target-version = ["py310"]
 include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
 line_length = 88
-py_version=311
+py_version=310
 
 [tool.semantic_release]
 # for default values check:

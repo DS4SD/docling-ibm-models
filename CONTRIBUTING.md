@@ -127,10 +127,10 @@ poetry install
 If for whatever reason you need to work in a specific (older) version of Python, run:
 
 ```bash
-poetry env use $(which python3.11)
+poetry env use $(which python3.10)
 ```
 
-This creates a Virtual Environment with Python 3.11. For other versions, replace `$(which python3.11)` by the path to the interpreter (e.g., `/usr/bin/python3.11`) or use `$(which pythonX.Y)`.
+This creates a Virtual Environment with Python 3.10. For other versions, replace `$(which python3.10)` by the path to the interpreter (e.g., `/usr/bin/python3.11`) or use `$(which pythonX.Y)`.
 
 
 #### Add a new dependency
