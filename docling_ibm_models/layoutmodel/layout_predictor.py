@@ -118,7 +118,7 @@ class LayoutPredictor:
         }
         return info
 
-    def predict(self, orig_img: Union[Image, np.array]) -> Iterable[dict]:
+    def predict(self, orig_img: Union[Image.Image, np.ndarray]) -> Iterable[dict]:
         r"""
         Predict bounding boxes for a given image.
         The origin (0, 0) is the top-left corner and the predicted bbox coords are provided as:
