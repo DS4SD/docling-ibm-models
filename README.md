@@ -1,5 +1,5 @@
 [![PyPI version](https://img.shields.io/pypi/v/docling-ibm-models)](https://pypi.org/project/docling-ibm-models/)
-![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)
+![Python](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue)
 [![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
@@ -36,7 +36,7 @@ RUN curl -sSL 'https://install.python-poetry.org' > install-poetry.py \
 To install and run the package, simply set up a poetry environment
 
 ```
-poetry env use $(which python3.11)
+poetry env use $(which python3.10)
 poetry shell
 ```
 
