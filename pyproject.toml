@@ -22,8 +22,8 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-torch = "2.2.2"
-torchvision = "0.17.2"
+torch = "^2.2.2"
+torchvision = ">=0.17.2"
 onnxruntime = "^1.16.2"
 numpy = "^1.24.4"
 lxml = "^4.9.1"
