@@ -1,3 +1,9 @@
+## [v1.1.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.1.1) - 2024-08-14
+
+### Fix
+
+* Allow newer torch and update deps ([#9](https://github.com/DS4SD/docling-ibm-models/issues/9)) ([`79e389a`](https://github.com/DS4SD/docling-ibm-models/commit/79e389a60f2fb9295617198d6985957aab53f04d))
+
 ## [v1.1.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.1.0) - 2024-07-18
 
 ### Feature
