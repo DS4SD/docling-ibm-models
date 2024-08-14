@@ -99,8 +99,13 @@ class TFPredictor:
     Table predictions for the in-memory Docling API
     """
 
-    def __init__(self, config):
+    def __init__(self, config, num_threads: int = None):
         r"""
+        The number of threads is decided, in the following order, by:
+        1. The init method parameter `num_threads`, if it is set.
+        2. The envvar "OMP_NUM_THREADS", if it is set.
+        3. The default value 4.
+
         Parameters
         ----------
         config : dict
@@ -123,6 +128,13 @@ class TFPredictor:
         self._post_processor = MatchingPostProcessor(config)
 
         self._init_word_map()
+
+        # Set the number of torch threads
+        if num_threads is None:
+            num_threads = int(os.environ.get("OMP_NUM_THREADS", 4))
+        self._num_threads = num_threads
+        torch.set_num_threads(num_threads)
+
         # Load the model
         self._model = self._load_model()
         self._model.eval()
