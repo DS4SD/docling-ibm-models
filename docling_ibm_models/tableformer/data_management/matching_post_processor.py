@@ -383,6 +383,71 @@ class MatchingPostProcessor:
         clean_matches = json.loads(clean_matches_string)
         return clean_matches
 
+    def _find_overlapping(self, table_cells):
+
+        def correct_overlap(box1, box2):
+            # Extract coordinates from the bounding boxes
+            x1_min, y1_min, x1_max, y1_max = box1["bbox"]
+            x2_min, y2_min, x2_max, y2_max = box2["bbox"]
+
+            # Calculate the overlap in both x and y directions
+            overlap_x = min(x1_max, x2_max) - max(x1_min, x2_min)
+            overlap_y = min(y1_max, y2_max) - max(y1_min, y2_min)
+
+            # If there is no overlap, return the original boxes
+            if overlap_x <= 0 or overlap_y <= 0:
+                return box1, box2
+
+            # Decide how to push the boxes apart
+            if overlap_x < overlap_y:
+                # Push horizontally
+                if x1_min < x2_min:
+                    # Move box1 to the left and box2 to the right
+                    box1["bbox"][2] -= overlap_x
+                    box2["bbox"][0] += overlap_x
+                else:
+                    # Move box2 to the left and box1 to the right
+                    box2["bbox"][2] -= overlap_x
+                    box1["bbox"][0] += overlap_x
+            else:
+                # Push vertically
+                if y1_min < y2_min:
+                    # Move box1 up and box2 down
+                    box1["bbox"][3] -= overlap_y
+                    box2["bbox"][1] += overlap_y
+                else:
+                    # Move box2 up and box1 down
+                    box2["bbox"][3] -= overlap_y
+                    box1["bbox"][1] += overlap_y
+
+            return box1, box2
+
+        def do_boxes_overlap(box1, box2):
+            # print("{} - {}".format(box1["bbox"], box2["bbox"]))
+            # Extract coordinates from the bounding boxes
+            x1_min, y1_min, x1_max, y1_max = box1["bbox"]
+            x2_min, y2_min, x2_max, y2_max = box2["bbox"]
+            # Check if one box is to the left of the other
+            if x1_max < x2_min or x2_max < x1_min:
+                return False
+            # Check if one box is above the other
+            if y1_max < y2_min or y2_max < y1_min:
+                return False
+            return True
+
+        def find_overlapping_pairs_indexes(bboxes):
+            overlapping_indexes = []
+            # Compare each box with every other box (combinations)
+            for i in range(len(bboxes)):
+                for j in range(i + 1, len(bboxes)):
+                    if do_boxes_overlap(bboxes[i], bboxes[j]):
+                        bboxes[i], bboxes[j] = correct_overlap(bboxes[i], bboxes[j])
+
+            return overlapping_indexes, bboxes
+
+        overlapping_indexes, table_cells = find_overlapping_pairs_indexes(table_cells)
+        return table_cells
+
     def _align_table_cells_to_pdf(self, table_cells, pdf_cells, matches):
         r"""
         USED in 8.a step
@@ -1261,7 +1326,9 @@ class MatchingPostProcessor:
             dedupl_table_cells, key=lambda k: k["cell_id"]
         )
 
-        if len(pdf_cells) > 300:
+        if (
+            len(pdf_cells) > 300
+        ):  # For performance, skip this step if there are too many pdf_cells
             aligned_table_cells2 = dedupl_table_cells_sorted
         else:
             aligned_table_cells2 = self._align_table_cells_to_pdf(
@@ -1280,6 +1347,10 @@ class MatchingPostProcessor:
         final_matches_wo = po1
         table_cells_wo = po2
         max_cell_id = po3
+
+        # As the last step - correct cell bboxes in a way that they don't overlap:
+        if len(table_cells_wo) <= 300:  # For performance reasons
+            table_cells_wo = self._find_overlapping(table_cells_wo)
 
         self._log().debug("*** final_matches_wo")
         self._log().debug(final_matches_wo)

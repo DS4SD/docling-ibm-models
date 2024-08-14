@@ -508,7 +508,7 @@ def test_tf_predictor():
             # List of dicts per table: [{"tf_responses":[...], "predict_details": {}}]
 
             multi_tf_output = predictor.multi_table_predict(
-                iocr_page, table_bboxes, False
+                iocr_page, table_bboxes, True
             )
 
             # Test output for validity, create visualizations...
@@ -539,10 +539,10 @@ def test_tf_predictor():
                         img1.rectangle(((xi0, yi0), (xi1, yi1)), outline="gray")
                     # Visualize original docling_ibm_models.tableformer predictions:
                     for predicted_bbox in predict_details["prediction_bboxes_page"]:
-                        xp0 = predicted_bbox[0] - 2
-                        yp0 = predicted_bbox[1] - 2
-                        xp1 = predicted_bbox[2] + 2
-                        yp1 = predicted_bbox[3] + 2
+                        xp0 = predicted_bbox[0] - 1
+                        yp0 = predicted_bbox[1] - 1
+                        xp1 = predicted_bbox[2] + 1
+                        yp1 = predicted_bbox[3] + 1
                         img1.rectangle(((xp0, yp0), (xp1, yp1)), outline="green")
 
                 # Check the structure of the list items
@@ -569,26 +569,26 @@ def test_tf_predictor():
                             yc1 = text_cell["b"]
                             img1.rectangle(((xc0, yc0), (xc1, yc1)), outline="red")
 
-                        x0 = response["bbox"]["l"] - 6
-                        y0 = response["bbox"]["t"] - 6
-                        x1 = response["bbox"]["r"] + 6
-                        y1 = response["bbox"]["b"] + 6
+                        x0 = response["bbox"]["l"] - 2
+                        y0 = response["bbox"]["t"] - 2
+                        x1 = response["bbox"]["r"] + 2
+                        y1 = response["bbox"]["b"] + 2
 
                         if response["column_header"]:
                             img1.rectangle(
-                                ((x0, y0), (x1, y1)), outline="blue", width=5
+                                ((x0, y0), (x1, y1)), outline="blue", width=2
                             )
                         elif response["row_header"]:
                             img1.rectangle(
-                                ((x0, y0), (x1, y1)), outline="magenta", width=5
+                                ((x0, y0), (x1, y1)), outline="magenta", width=2
                             )
                         elif response["row_section"]:
                             img1.rectangle(
-                                ((x0, y0), (x1, y1)), outline="brown", width=5
+                                ((x0, y0), (x1, y1)), outline="brown", width=2
                             )
                         else:
                             img1.rectangle(
-                                ((x0, y0), (x1, y1)), outline="blue", width=1
+                                ((x0, y0), (x1, y1)), outline="black", width=1
                             )
                 if viz:
                     viz_root = "./tests/test_data/viz/"
