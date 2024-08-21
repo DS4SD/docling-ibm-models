@@ -33,8 +33,7 @@ tqdm = "^4.64.0"
 apted = "^1.0.3"
 Distance = "^0.1.3"
 mean_average_precision = "^2021.4.26.0"
-opencv-python-headless = { version = "^4.9.0.80", markers = 'sys_platform=="linux"'}
-opencv-python = { version = "^4.9.0.80", markers = 'sys_platform!="linux"'}
+opencv-python-headless = { version = "^4.9.0.80" }
 
 [tool.poetry.dev-dependencies]
 black = {extras = ["jupyter"], version = "^24.4.2"}
