@@ -1,3 +1,9 @@
+## [v1.1.2](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.1.2) - 2024-08-21
+
+### Fix
+
+* Align to use opencv-python-headless ([#12](https://github.com/DS4SD/docling-ibm-models/issues/12)) ([`22097fb`](https://github.com/DS4SD/docling-ibm-models/commit/22097fb3a451c9a2e4531666f96b4a126701b3b4))
+
 ## [v1.1.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.1.1) - 2024-08-14
 
 ### Fix
