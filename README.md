@@ -9,7 +9,7 @@
 
 # Docling IBM models
 
-AI modules to support the Dockling PDF document conversion project.
+AI modules to support the Docling PDF document conversion project.
 
 - TableFormer is an AI module that recognizes the structure of a table and the bounding boxes of the table content.
 - Layout model is an AI model that provides among other things ability to detect tables on the page. This package contains inference code for Layout model.
