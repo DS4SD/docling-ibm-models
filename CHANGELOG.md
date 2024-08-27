@@ -1,3 +1,9 @@
+## [v1.1.3](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.1.3) - 2024-08-27
+
+### Fix
+
+* Table cell overlap removal in TF post-processing: ([#10](https://github.com/DS4SD/docling-ibm-models/issues/10)) ([`e8f396d`](https://github.com/DS4SD/docling-ibm-models/commit/e8f396d19a277b0f3147c3ac3af0b5e452912879))
+
 ## [v1.1.2](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.1.2) - 2024-08-21
 
 ### Fix
