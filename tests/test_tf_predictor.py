@@ -525,8 +525,8 @@ def test_tf_predictor():
 
                 xt0 = table_bboxes[t][0]
                 yt0 = table_bboxes[t][1]
-                xt1 = table_bboxes[t][2]
-                yt1 = table_bboxes[t][3]
+                xt1 = max(xt0, table_bboxes[t][2])
+                yt1 = max(yt0, table_bboxes[t][3])
                 img1.rectangle(((xt0, yt0), (xt1, yt1)), outline="pink", width=5)
 
                 if viz:
@@ -534,15 +534,15 @@ def test_tf_predictor():
                     for iocr_word in iocr_page["tokens"]:
                         xi0 = iocr_word["bbox"]["l"]
                         yi0 = iocr_word["bbox"]["t"]
-                        xi1 = iocr_word["bbox"]["r"]
-                        yi1 = iocr_word["bbox"]["b"]
+                        xi1 = max(xi0, iocr_word["bbox"]["r"])
+                        yi1 = max(yi0, iocr_word["bbox"]["b"])
                         img1.rectangle(((xi0, yi0), (xi1, yi1)), outline="gray")
                     # Visualize original docling_ibm_models.tableformer predictions:
                     for predicted_bbox in predict_details["prediction_bboxes_page"]:
                         xp0 = predicted_bbox[0] - 1
                         yp0 = predicted_bbox[1] - 1
-                        xp1 = predicted_bbox[2] + 1
-                        yp1 = predicted_bbox[3] + 1
+                        xp1 = max(xp0, predicted_bbox[2] + 1)
+                        yp1 = max(yp0, predicted_bbox[3] + 1)
                         img1.rectangle(((xp0, yp0), (xp1, yp1)), outline="green")
 
                 # Check the structure of the list items
@@ -565,14 +565,14 @@ def test_tf_predictor():
                         for text_cell in response["text_cell_bboxes"]:
                             xc0 = text_cell["l"]
                             yc0 = text_cell["t"]
-                            xc1 = text_cell["r"]
-                            yc1 = text_cell["b"]
+                            xc1 = max(xc0, text_cell["r"])
+                            yc1 = max(yc0, text_cell["b"])
                             img1.rectangle(((xc0, yc0), (xc1, yc1)), outline="red")
 
                         x0 = response["bbox"]["l"] - 2
                         y0 = response["bbox"]["t"] - 2
-                        x1 = response["bbox"]["r"] + 2
-                        y1 = response["bbox"]["b"] + 2
+                        x1 = max(x0, response["bbox"]["r"] + 2)
+                        y1 = max(y0, response["bbox"]["b"] + 2)
 
                         if response["column_header"]:
                             img1.rectangle(

@@ -257,7 +257,9 @@ class BaseModel(ABC):
                 self._log().info(
                     "Loading model checkpoint file: {}".format(checkpoint_file)
                 )
-                saved_model = torch.load(checkpoint_file, map_location=self._device)
+                saved_model = torch.load(
+                    checkpoint_file, map_location=self._device, weights_only=False
+                )
                 return saved_model, checkpoint_file
             except RuntimeError:
                 self._log().error("Cannot load file: {}".format(checkpoint_file))
