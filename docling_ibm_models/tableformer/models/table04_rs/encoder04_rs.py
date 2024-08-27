@@ -30,7 +30,7 @@ class Encoder04(nn.Module):
         self.enc_image_size = enc_image_size
         self._encoder_dim = enc_dim
 
-        resnet = torchvision.models.resnet18(pretrained=False)
+        resnet = torchvision.models.resnet18()
         modules = list(resnet.children())[:-3]
 
         self._resnet = nn.Sequential(*modules)
