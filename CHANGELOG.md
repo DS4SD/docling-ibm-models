@@ -1,3 +1,9 @@
+## [v1.1.4](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.1.4) - 2024-08-28
+
+### Fix
+
+* Fix torch dependency for Intel Macs ([#15](https://github.com/DS4SD/docling-ibm-models/issues/15)) ([`12153f8`](https://github.com/DS4SD/docling-ibm-models/commit/12153f829f2ccf25ab03a12924982b1220bf9d6e))
+
 ## [v1.1.3](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.1.3) - 2024-08-27
 
 ### Fix
