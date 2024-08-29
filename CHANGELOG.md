@@ -1,3 +1,9 @@
+## [v1.1.5](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.1.5) - 2024-08-29
+
+### Fix
+
+* **poetry:** Remove unused dependencies from toml. Update lock. ([#16](https://github.com/DS4SD/docling-ibm-models/issues/16)) ([`3792577`](https://github.com/DS4SD/docling-ibm-models/commit/379257780f12a26770a93a0e3dbf61e36531affc))
+
 ## [v1.1.4](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.1.4) - 2024-08-28
 
 ### Fix
