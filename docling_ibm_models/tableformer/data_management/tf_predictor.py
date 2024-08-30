@@ -696,7 +696,12 @@ class TFPredictor:
             prediction["bboxes"] = corrected_bboxes
 
         # Match the cells
-        matching_details = {"table_cells": [], "matches": {}}
+        matching_details = {
+            "table_cells": [],
+            "matches": {},
+            "pdf_cells": [],
+            "prediction_bboxes_page": [],
+        }
 
         # Table bbox upscaling will scale predicted bboxes too within cell matcher
         scaled_table_bbox = [
@@ -803,7 +808,12 @@ class TFPredictor:
             prediction["bboxes"] = corrected_bboxes
 
         # Match the cells
-        matching_details = {"table_cells": [], "matches": {}}
+        matching_details = {
+            "table_cells": [],
+            "matches": {},
+            "pdf_cells": [],
+            "prediction_bboxes_page": [],
+        }
 
         # Table bbox upscaling will scale predicted bboxes too within cell matcher
         scaled_table_bbox = [
@@ -819,10 +829,13 @@ class TFPredictor:
             )
         # Post-processing
         if len(prediction["bboxes"]) > 0:
-            if self.enable_post_process:
-                AggProfiler().begin("post_process", self._prof)
-                matching_details = self._post_processor.process(matching_details)
-                AggProfiler().end("post_process", self._prof)
+            if (
+                len(iocr_page["tokens"]) > 0
+            ):  # There are at least some pdf cells to match with
+                if self.enable_post_process:
+                    AggProfiler().begin("post_process", self._prof)
+                    matching_details = self._post_processor.process(matching_details)
+                    AggProfiler().end("post_process", self._prof)
 
         # Generate the expected Docling responses
         AggProfiler().begin("generate_docling_response", self._prof)

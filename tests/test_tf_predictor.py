@@ -25,14 +25,17 @@ docling_api_data = {
     "table_jsons": [
         "./tests/test_data/samples/ADS.2007.page_123.png_iocr.parse_format.json",
         "./tests/test_data/samples/PHM.2013.page_30.png_iocr.parse_format.json",
+        "./tests/test_data/samples/empty_iocr.png.json"
     ],
     "png_images": [
         "./tests/test_data/samples/ADS.2007.page_123.png",
         "./tests/test_data/samples/PHM.2013.page_30.png",
+        "./tests/test_data/samples/empty_iocr.png"
     ],
     "table_bboxes": [
         [[178, 748, 1061, 976], [177, 1163, 1062, 1329]],
         [[100, 186, 1135, 525]],
+        [[178, 748, 1061, 976], [177, 1163, 1062, 1329]]
     ],
 }
 
