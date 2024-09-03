@@ -127,13 +127,14 @@ class CellMatcher:
             Dictionary with all details about the mathings between the table and pdf cells
         """
         pdf_cells = copy.deepcopy(iocr_page["tokens"])
-        for word in pdf_cells:
-            word["bbox"] = [
-                word["bbox"]["l"],
-                word["bbox"]["t"],
-                word["bbox"]["r"],
-                word["bbox"]["b"],
-            ]
+        if len(pdf_cells) > 0:
+            for word in pdf_cells:
+                word["bbox"] = [
+                    word["bbox"]["l"],
+                    word["bbox"]["t"],
+                    word["bbox"]["r"],
+                    word["bbox"]["b"],
+                ]
         table_bboxes = prediction["bboxes"]
         table_classes = prediction["classes"]
         # BBOXES transformed...
@@ -145,9 +146,13 @@ class CellMatcher:
         table_cells = self._build_table_cells(
             html_seq, otsl_seq, table_bboxes_page, table_classes
         )
-        matches, matches_counter = self._intersection_over_pdf_match(
-            table_cells, pdf_cells
-        )
+
+        matches = {}
+        matches_counter = 0
+        if len(pdf_cells) > 0:
+            matches, matches_counter = self._intersection_over_pdf_match(
+                table_cells, pdf_cells
+            )
 
         self._log().debug("matches_counter: {}".format(matches_counter))
 
@@ -188,13 +193,14 @@ class CellMatcher:
             Dictionary with all details about the mathings between the table and pdf cells
         """
         pdf_cells = copy.deepcopy(iocr_page["tokens"])
-        for word in pdf_cells:
-            word["bbox"] = [
-                word["bbox"]["l"],
-                word["bbox"]["t"],
-                word["bbox"]["r"],
-                word["bbox"]["b"],
-            ]
+        if len(pdf_cells) > 0:
+            for word in pdf_cells:
+                word["bbox"] = [
+                    word["bbox"]["l"],
+                    word["bbox"]["t"],
+                    word["bbox"]["r"],
+                    word["bbox"]["b"],
+                ]
 
         table_bboxes = prediction["bboxes"]
         table_classes = prediction["classes"]

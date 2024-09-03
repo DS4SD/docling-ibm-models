@@ -1,0 +1,67 @@
+{
+    "doc_source_type": {},
+    "font_dist_info": {},
+    "info": {
+        "histogram": {
+            "mean-char-height": {},
+            "mean-char-width": {},
+            "number-of-chars": {}
+        },
+        "styles": []
+    },
+    "title": "",
+    "metadata": {
+        "numPages": 1
+    },
+    "pages": [
+        {
+            "blocks": [],
+            "cells": [],
+            "height": 1612,
+            "width": 1237,
+            "dimensions": {
+                "bbox": [
+                    0.0,
+                    0.0,
+                    1237,
+                    1612
+                ],
+                "height": 1612,
+                "origin": "TopLeft",
+                "width": 1237
+            },
+            "fonts": [],
+            "links": [],
+            "rotation": 0.0,
+            "rectangles": [],
+            "textPositions": [],
+            "text_lines": [],
+            "tokens": [],
+            "localized_image_locations": [],
+            "scanned_elements": [],
+            "paths": [],
+            "pageNumber": 1,
+            "page_image": {},
+            "lang": [
+                "en",
+                "pt",
+                "fr",
+                "it",
+                "es",
+                "fi"
+            ]
+        }
+    ],
+    "settings": {},
+    "passedHeadersFooters": {
+        "headerFooters": {
+            "1": {
+                "headerHeight": 0,
+                "footerHeight": 0
+            }
+        },
+        "headerFound": false,
+        "footerFound": false
+    },
+    "styles": []
+}
