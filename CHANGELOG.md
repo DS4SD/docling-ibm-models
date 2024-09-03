@@ -1,3 +1,9 @@
+## [v1.1.6](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.1.6) - 2024-09-03
+
+### Fix
+
+* TableFormer raises IndexError: too many indices for array ([`ad494ca`](https://github.com/DS4SD/docling-ibm-models/commit/ad494caaaceb46fcd99054dba70c10fc688a57e6))
+
 ## [v1.1.5](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.1.5) - 2024-08-29
 
 ### Fix
