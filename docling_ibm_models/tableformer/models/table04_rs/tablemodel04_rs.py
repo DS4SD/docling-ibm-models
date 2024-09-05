@@ -281,12 +281,8 @@ class TableModel04_rs(BaseModel, nn.Module):
         else:
             outputs_class, outputs_coord = None, None
 
-        if outputs_class is not None:
-            if torch.is_tensor(outputs_class):
-                outputs_class.to(self._device)
-        if outputs_coord is not None:
-            if torch.is_tensor(outputs_coord):
-                outputs_coord.to(self._device)
+        outputs_class.to(self._device)
+        outputs_coord.to(self._device)
 
         ########################################################################################
         # Merge First and Last predicted BBOX for each span, according to bboxes_to_merge
