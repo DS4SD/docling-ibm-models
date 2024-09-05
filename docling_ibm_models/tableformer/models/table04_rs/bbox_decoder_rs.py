@@ -157,7 +157,12 @@ class BBoxDecoder(nn.Module):
             predictions_classes.append(self._class_embed(h))
         if len(predictions_bboxes) > 0:
             predictions_bboxes = torch.stack([x[0] for x in predictions_bboxes])
+        else:
+            predictions_bboxes = torch.empty(0)
+
         if len(predictions_classes) > 0:
             predictions_classes = torch.stack([x[0] for x in predictions_classes])
+        else:
+            predictions_classes = torch.empty(0)
 
         return predictions_classes, predictions_bboxes

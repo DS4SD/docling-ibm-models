@@ -523,8 +523,9 @@ class TFPredictor:
         # return the resized image
         return resized, sf
 
-    def multi_table_predict(self, iocr_page, table_bboxes, do_matching=True):
-        # def multi_table_predict(self, iocr_page, page_image, table_bboxes):
+    def multi_table_predict(
+        self, iocr_page, table_bboxes, do_matching=True, correct_overlapping_cells=False
+    ):
         multi_tf_output = []
         page_image = iocr_page["image"]
 
@@ -546,7 +547,12 @@ class TFPredictor:
             # Predict
             if do_matching:
                 tf_responses, predict_details = self.predict(
-                    iocr_page, table_bbox, table_image, scale_factor, None
+                    iocr_page,
+                    table_bbox,
+                    table_image,
+                    scale_factor,
+                    None,
+                    correct_overlapping_cells,
                 )
             else:
                 tf_responses, predict_details = self.predict_dummy(
@@ -733,7 +739,13 @@ class TFPredictor:
         return tf_output, matching_details
 
     def predict(
-        self, iocr_page, table_bbox, table_image, scale_factor, eval_res_preds=None
+        self,
+        iocr_page,
+        table_bbox,
+        table_image,
+        scale_factor,
+        eval_res_preds=None,
+        correct_overlapping_cells=False,
     ):
         r"""
         Predict the table out of an image in memory
@@ -744,6 +756,8 @@ class TFPredictor:
             Docling provided table data
         eval_res_preds : dict
             Ready predictions provided by the evaluation results
+        correct_overlapping_cells : boolean
+            Enables or disables last post-processing step, that fixes cell bboxes to remove overlap
 
         Returns
         -------
@@ -834,7 +848,9 @@ class TFPredictor:
             ):  # There are at least some pdf cells to match with
                 if self.enable_post_process:
                     AggProfiler().begin("post_process", self._prof)
-                    matching_details = self._post_processor.process(matching_details)
+                    matching_details = self._post_processor.process(
+                        matching_details, correct_overlapping_cells
+                    )
                     AggProfiler().end("post_process", self._prof)
 
         # Generate the expected Docling responses
