@@ -123,6 +123,9 @@ def otsl_check_right(rs_split, x, y):
 
 
 def otsl_to_html(rs_list, logdebug):
+    if len(rs_list) == 0:
+        return []
+
     if rs_list[0] not in ["fcel", "ched", "rhed", "srow", "ecel"]:
         # Most likely already HTML...
         return rs_list

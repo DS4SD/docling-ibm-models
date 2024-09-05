@@ -4,6 +4,7 @@
 #
 import json
 import logging
+import math
 import statistics
 
 import docling_ibm_models.tableformer.settings as s
@@ -403,45 +404,63 @@ class MatchingPostProcessor:
                 # Push horizontally
                 if x1_min < x2_min:
                     # Move box1 to the left and box2 to the right
-                    box1["bbox"][2] -= overlap_x
-                    box2["bbox"][0] += overlap_x
+                    box1["bbox"][2] -= math.ceil(overlap_x / 2) + 2
+                    box2["bbox"][0] += math.floor(overlap_x / 2)
                 else:
                     # Move box2 to the left and box1 to the right
-                    box2["bbox"][2] -= overlap_x
-                    box1["bbox"][0] += overlap_x
+                    box2["bbox"][2] -= math.ceil(overlap_x / 2) + 2
+                    box1["bbox"][0] += math.floor(overlap_x / 2)
             else:
                 # Push vertically
                 if y1_min < y2_min:
                     # Move box1 up and box2 down
-                    box1["bbox"][3] -= overlap_y
-                    box2["bbox"][1] += overlap_y
+                    box1["bbox"][3] -= math.ceil(overlap_y / 2) + 2
+                    box2["bbox"][1] += math.floor(overlap_y / 2)
                 else:
                     # Move box2 up and box1 down
-                    box2["bbox"][3] -= overlap_y
-                    box1["bbox"][1] += overlap_y
+                    box2["bbox"][3] -= math.ceil(overlap_y / 2) + 2
+                    box1["bbox"][1] += math.floor(overlap_y / 2)
+
+            # Will flip coordinates in proper order, if previous operations reversed it
+            box1["bbox"] = [
+                min(box1["bbox"][0], box1["bbox"][2]),
+                min(box1["bbox"][1], box1["bbox"][3]),
+                max(box1["bbox"][0], box1["bbox"][2]),
+                max(box1["bbox"][1], box1["bbox"][3]),
+            ]
+            box2["bbox"] = [
+                min(box2["bbox"][0], box2["bbox"][2]),
+                min(box2["bbox"][1], box2["bbox"][3]),
+                max(box2["bbox"][0], box2["bbox"][2]),
+                max(box2["bbox"][1], box2["bbox"][3]),
+            ]
 
             return box1, box2
 
         def do_boxes_overlap(box1, box2):
-            # print("{} - {}".format(box1["bbox"], box2["bbox"]))
-            # Extract coordinates from the bounding boxes
-            x1_min, y1_min, x1_max, y1_max = box1["bbox"]
-            x2_min, y2_min, x2_max, y2_max = box2["bbox"]
-            # Check if one box is to the left of the other
-            if x1_max < x2_min or x2_max < x1_min:
+            B1 = box1["bbox"]
+            B2 = box2["bbox"]
+            if (
+                (B1[0] >= B2[2])
+                or (B1[2] <= B2[0])
+                or (B1[3] <= B2[1])
+                or (B1[1] >= B2[3])
+            ):
                 return False
-            # Check if one box is above the other
-            if y1_max < y2_min or y2_max < y1_min:
-                return False
-            return True
+            else:
+                return True
 
         def find_overlapping_pairs_indexes(bboxes):
             overlapping_indexes = []
             # Compare each box with every other box (combinations)
             for i in range(len(bboxes)):
                 for j in range(i + 1, len(bboxes)):
-                    if do_boxes_overlap(bboxes[i], bboxes[j]):
-                        bboxes[i], bboxes[j] = correct_overlap(bboxes[i], bboxes[j])
+                    if i != j:
+                        if bboxes[i] != bboxes[j]:
+                            if do_boxes_overlap(bboxes[i], bboxes[j]):
+                                bboxes[i], bboxes[j] = correct_overlap(
+                                    bboxes[i], bboxes[j]
+                                )
 
             return overlapping_indexes, bboxes
 
@@ -1144,7 +1163,7 @@ class MatchingPostProcessor:
                 new_pdf_cells.append(pdf_cells[i])
         return new_pdf_cells
 
-    def process(self, matching_details):
+    def process(self, matching_details, correct_overlapping_cells=False):
         r"""
         Do post processing, see details in the comments below
 
@@ -1348,9 +1367,10 @@ class MatchingPostProcessor:
         table_cells_wo = po2
         max_cell_id = po3
 
-        # As the last step - correct cell bboxes in a way that they don't overlap:
-        if len(table_cells_wo) <= 300:  # For performance reasons
-            table_cells_wo = self._find_overlapping(table_cells_wo)
+        if correct_overlapping_cells:
+            # As the last step - correct cell bboxes in a way that they don't overlap:
+            if len(table_cells_wo) <= 300:  # For performance reasons
+                table_cells_wo = self._find_overlapping(table_cells_wo)
 
         self._log().debug("*** final_matches_wo")
         self._log().debug(final_matches_wo)
