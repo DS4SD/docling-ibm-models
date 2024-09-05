@@ -1,3 +1,9 @@
+## [v1.1.7](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.1.7) - 2024-09-05
+
+### Fix
+
+* Validation and typechecks in TF post processing and OTSL to HTML conversion function ([#18](https://github.com/DS4SD/docling-ibm-models/issues/18)) ([`d607914`](https://github.com/DS4SD/docling-ibm-models/commit/d60791489596c4052b853d3c1dc559ba026a9f77))
+
 ## [v1.1.6](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.1.6) - 2024-09-03
 
 ### Fix
