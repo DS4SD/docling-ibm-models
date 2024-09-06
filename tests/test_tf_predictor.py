@@ -511,7 +511,11 @@ def test_tf_predictor():
             # List of dicts per table: [{"tf_responses":[...], "predict_details": {}}]
 
             multi_tf_output = predictor.multi_table_predict(
-                iocr_page, table_bboxes, True
+                iocr_page,
+                table_bboxes, 
+                do_matching=True,
+                correct_overlapping_cells=False,
+                sort_row_col_indexes=True
             )
 
             # Test output for validity, create visualizations...
