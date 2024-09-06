@@ -627,6 +627,10 @@ class TFPredictor:
                 # Counting matched cols/rows from actual indexes (and not ids)
                 predict_details["num_cols"] = len(indexing_end_cols)
                 predict_details["num_rows"] = len(indexing_end_rows)
+            else:
+                otsl_seq = predict_details["prediction"]["rs_seq"]
+                predict_details["num_cols"] = otsl_seq.index("nl")
+                predict_details["num_rows"] = otsl_seq.count("nl")
 
             # Put results into multi_tf_output
             multi_tf_output.append(
