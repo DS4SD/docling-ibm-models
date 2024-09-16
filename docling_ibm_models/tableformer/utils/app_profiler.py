@@ -6,6 +6,8 @@ import time
 from collections import deque
 from statistics import mean, median
 
+from docling_ibm_models.tableformer.utils.mem_monitor import MemMonitor
+
 
 class SingletonClass(type):
     r"""
@@ -37,10 +39,12 @@ class Profiler:
     def __init__(self):
         self._section_dts = {}  # section name -> sum(section intervals)
         self._section_calls = {}  # section name -> number of invocations
-        self._section_kB = {}  # section name -> max kB of used heap
+        self._section_kB = {}  # section name -> max kB of used heap (resident set size)
 
         # section name -> beginning of the last interval
         self._last_begin = {}
+
+        self._mem_monitor = MemMonitor()
 
     def begin(self, section_name, enable=True):
         r"""
@@ -83,13 +87,20 @@ class Profiler:
         if section_name not in self._last_begin:
             return False
 
+        # Get memory
+        kB = self._mem_monitor.get_memory()
+        if isinstance(kB, dict):
+            kB = kB["resident"]
+
         dt = time.time() - self._last_begin[section_name]
         if section_name not in self._section_dts:
             self._section_dts[section_name] = dt
             self._section_calls[section_name] = 1
+            self._section_kB[section_name] = kB
         else:
             self._section_dts[section_name] += dt
             self._section_calls[section_name] += 1
+            self._section_kB[section_name] = max(kB, self._section_kB[section_name])
 
         return True
 
