@@ -129,12 +129,15 @@ class CellMatcher:
         pdf_cells = copy.deepcopy(iocr_page["tokens"])
         if len(pdf_cells) > 0:
             for word in pdf_cells:
-                word["bbox"] = [
-                    word["bbox"]["l"],
-                    word["bbox"]["t"],
-                    word["bbox"]["r"],
-                    word["bbox"]["b"],
-                ]
+                if isinstance(word["bbox"], list):
+                    continue
+                elif isinstance(word["bbox"], dict):
+                    word["bbox"] = [
+                        word["bbox"]["l"],
+                        word["bbox"]["t"],
+                        word["bbox"]["r"],
+                        word["bbox"]["b"],
+                    ]
         table_bboxes = prediction["bboxes"]
         table_classes = prediction["classes"]
         # BBOXES transformed...
