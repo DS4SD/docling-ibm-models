@@ -50,8 +50,8 @@ def demo(
             draw = ImageDraw.Draw(out_img)
 
             for i, pred in enumerate(preds):
-                scr = pred["confidence"]
-                lab = pred["label"]
+                score = pred["confidence"]
+                label = pred["label"]
                 box = [
                     round(pred["l"]),
                     round(pred["t"]),
@@ -59,17 +59,17 @@ def demo(
                     round(pred["b"]),
                 ]
 
-                if lab == "Table":
-                    draw.rectangle(
-                        box,
-                        outline="red",
-                    )
-                    draw.text(
-                        (box[0], box[1]),
-                        text=str(lab),
-                        fill="blue",
-                    )
-                    logger.info("Table %s: bbox=%s", i, box)
+                # Draw bbox and label
+                draw.rectangle(
+                    box,
+                    outline="red",
+                )
+                draw.text(
+                    (box[0], box[1]),
+                    text=str(label),
+                    fill="blue",
+                )
+                logger.info("%s: [label|score|bbox] = ['%s' | %s | %s]", i, label, score, box)
 
             save_fn = os.path.join(viz_dir, os.path.basename(img_fn))
             out_img.save(save_fn)
