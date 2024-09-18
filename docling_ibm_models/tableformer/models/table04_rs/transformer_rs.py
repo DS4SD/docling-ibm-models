@@ -149,11 +149,11 @@ class Tag_Transformer(nn.Module):
         self._positional_encoding = PositionalEncoding(embed_dim)
         self._td_encode = td_encode
 
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=embed_dim, nhead=n_heads, dim_feedforward=dim_ff
+        )
         self._encoder = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(
-                d_model=embed_dim, nhead=n_heads, dim_feedforward=dim_ff
-            ),
-            num_layers=encoder_layers,
+            encoder_layer, num_layers=encoder_layers, enable_nested_tensor=False
         )
 
         self._decoder = TMTransformerDecoder(

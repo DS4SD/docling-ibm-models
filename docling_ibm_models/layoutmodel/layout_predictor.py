@@ -14,29 +14,6 @@ MODEL_CHECKPOINT_FN = "model.pt"
 DEFAULT_NUM_THREADS = 4
 
 
-# Classes:
-CLASSES_MAP = {
-    0: "background",
-    1: "Caption",
-    2: "Footnote",
-    3: "Formula",
-    4: "List-item",
-    5: "Page-footer",
-    6: "Page-header",
-    7: "Picture",
-    8: "Section-header",
-    9: "Table",
-    10: "Text",
-    11: "Title",
-    12: "Document Index",
-    13: "Code",
-    14: "Checkbox-Selected",
-    15: "Checkbox-Unselected",
-    16: "Form",
-    17: "Key-Value Region",
-}
-
-
 class LayoutPredictor:
     r"""
     Document layout prediction using ONNX
@@ -69,6 +46,31 @@ class LayoutPredictor:
         ------
         FileNotFoundError when the model's ONNX file is missing
         """
+        # Initialize classes map:
+        self._classes_map = {
+            0: "background",
+            1: "Caption",
+            2: "Footnote",
+            3: "Formula",
+            4: "List-item",
+            5: "Page-footer",
+            6: "Page-header",
+            7: "Picture",
+            8: "Section-header",
+            9: "Table",
+            10: "Text",
+            11: "Title",
+            12: "Document Index",
+            13: "Code",
+            14: "Checkbox-Selected",
+            15: "Checkbox-Unselected",
+            16: "Form",
+            17: "Key-Value Region",
+        }
+
+        # Blacklisted classes
+        self._black_classes = set(["Form", "Key-Value Region"])
+
         # Set basic params
         self._threshold = 0.6  # Score threshold
         self._image_size = 640
@@ -159,13 +161,19 @@ class LayoutPredictor:
         )
 
         # Yield output
-        for label, box, score in zip(labels[0], boxes[0], scores[0]):
+        for label_idx, box, score in zip(labels[0], boxes[0], scores[0]):
+            # Filter out blacklisted classes
+            label = self._classes_map[label_idx]
+            if label in self._black_classes:
+                continue
+
+            # Check against threshold
             if score > self._threshold:
                 yield {
                     "l": box[0] / self._image_size * w,
                     "t": box[1] / self._image_size * h,
                     "r": box[2] / self._image_size * w,
                     "b": box[3] / self._image_size * h,
-                    "label": CLASSES_MAP[label],
+                    "label": label,
                     "confidence": score,
                 }

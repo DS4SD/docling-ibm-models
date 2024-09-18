@@ -1,3 +1,9 @@
+## [v1.2.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.2.0) - 2024-09-17
+
+### Feature
+
+* **LayoutPredictor:** Introduce black-listed classes which are filtered out from the response. ([#26](https://github.com/DS4SD/docling-ibm-models/issues/26)) ([`86a6a50`](https://github.com/DS4SD/docling-ibm-models/commit/86a6a5071bd84dd2b6806ac413a3163e78b6127f))
+
 ## [v1.1.7](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.1.7) - 2024-09-05
 
 ### Fix

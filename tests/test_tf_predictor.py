@@ -10,6 +10,7 @@ from pathlib import Path
 import cv2
 from PIL import Image, ImageDraw
 
+from docling_ibm_models.tableformer.utils.app_profiler import AggProfiler
 import docling_ibm_models.tableformer.data_management.tf_predictor as tf_predictor
 from docling_ibm_models.tableformer.data_management.tf_predictor import \
     TFPredictor
@@ -99,7 +100,7 @@ test_config = {
         "padding": False,
         "padding_size": 50,
         "disable_post_process": False,
-        "profiling": False,
+        "profiling": True,
         "device_mode": "auto",
     },
     "dataset_wordmap": {
@@ -603,6 +604,12 @@ def test_tf_predictor():
                     png_img_bfn1 = png_img_bfn.replace(".png", "." + str(t) + ".png")
                     viz_fn = os.path.join(viz_root, png_img_bfn1)
                     img.save(viz_fn)
+
+    # Get profiling data
+    profiling_data = AggProfiler().get_data()
+    print("Profiling data:")
+    print(json.dumps(profiling_data, indent=2, sort_keys=True))
+
     # assert False
 
 
