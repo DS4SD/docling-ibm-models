@@ -686,13 +686,20 @@ class TFPredictor:
                 )
 
                 if outputs_coord is not None:
-                    bbox_pred = u.box_cxcywh_to_xyxy(outputs_coord)
-                    prediction["bboxes"] = bbox_pred.tolist()
+                    if len(outputs_coord) == 0:
+                        prediction["bboxes"] = []
+                    else:
+                        bbox_pred = u.box_cxcywh_to_xyxy(outputs_coord)
+                        prediction["bboxes"] = bbox_pred.tolist()
                 else:
                     prediction["bboxes"] = []
+
                 if outputs_class is not None:
-                    result_class = torch.argmax(outputs_class, dim=1)
-                    prediction["classes"] = result_class.tolist()
+                    if len(outputs_class) == 0:
+                        prediction["classes"] = []
+                    else:
+                        result_class = torch.argmax(outputs_class, dim=1)
+                        prediction["classes"] = result_class.tolist()
                 else:
                     prediction["classes"] = []
                 if self._remove_padding:
@@ -807,13 +814,20 @@ class TFPredictor:
                 )
 
                 if outputs_coord is not None:
-                    bbox_pred = u.box_cxcywh_to_xyxy(outputs_coord)
-                    prediction["bboxes"] = bbox_pred.tolist()
+                    if len(outputs_coord) == 0:
+                        prediction["bboxes"] = []
+                    else:
+                        bbox_pred = u.box_cxcywh_to_xyxy(outputs_coord)
+                        prediction["bboxes"] = bbox_pred.tolist()
                 else:
                     prediction["bboxes"] = []
+
                 if outputs_class is not None:
-                    result_class = torch.argmax(outputs_class, dim=1)
-                    prediction["classes"] = result_class.tolist()
+                    if len(outputs_class) == 0:
+                        prediction["classes"] = []
+                    else:
+                        result_class = torch.argmax(outputs_class, dim=1)
+                        prediction["classes"] = result_class.tolist()
                 else:
                     prediction["classes"] = []
                 if self._remove_padding:
