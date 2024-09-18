@@ -1,3 +1,10 @@
+## [v1.2.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.2.1) - 2024-09-18
+
+### Fix
+
+* Safer bbox processing ([#27](https://github.com/DS4SD/docling-ibm-models/issues/27)) ([`d37272e`](https://github.com/DS4SD/docling-ibm-models/commit/d37272eb8e441045dc7c903530db4d1afd051f3e))
+* Make col/row re-sorting optional on TF predictor (#19) [skip ci] ([`7e9758c`](https://github.com/DS4SD/docling-ibm-models/commit/7e9758c684317143ffd7bbfba71ad8d8328854b7))
+
 ## [v1.2.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.2.0) - 2024-09-17
 
 ### Feature
