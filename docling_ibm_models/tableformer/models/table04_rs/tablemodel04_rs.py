@@ -308,8 +308,12 @@ class TableModel04_rs(BaseModel, nn.Module):
 
         if len(outputs_coord1) > 0:
             outputs_coord1 = torch.stack(outputs_coord1)
+        else:
+            outputs_coord1 = torch.empty(0)
         if len(outputs_class1) > 0:
             outputs_class1 = torch.stack(outputs_class1)
+        else:
+            outputs_class1 = torch.empty(0)
 
         outputs_class = outputs_class1
         outputs_coord = outputs_coord1
