@@ -76,7 +76,7 @@ Below we list datasets used with their description, source, and ***"TableFormer 
 
 ## Configuration file
 
-Example configuration can be seen inside test `tests/test_tf_predictor.py`
+Example configuration can be found inside test `tests/test_tf_predictor.py`
 These are the main sections of the configuration file:
 
 - `dataset`: The directory for prepared data and the parameters used during the data loading.
@@ -94,16 +94,13 @@ You can download the model weights and config files from the links:
 - [TableFormer Checkpoint](https://huggingface.co/ds4sd/docling-models/tree/main/model_artifacts/tableformer)
 - [beehive_v0.0.5](https://huggingface.co/ds4sd/docling-models/tree/main/model_artifacts/layout/beehive_v0.0.5)
 
-Place the downloaded files into `tests/test_data/model_artifacts/` directory.
-
 
 ## Inference Tests
 
-This contains unit tests for Docling models.
+You can run the inference tests for the models with:
 
-First download the model weights (see above), then run:
 ```
-./devtools/check_code.sh
+python -m pytest tests/
 ```
 
 This will also generate prediction and matching visualizations that can be found here:

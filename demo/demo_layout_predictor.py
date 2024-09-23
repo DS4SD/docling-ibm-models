@@ -11,10 +11,9 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw
+from huggingface_hub import snapshot_download
 
 from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
-
-ARTIFACT_PATH = "tests/test_data/model_artifacts"
 
 
 def demo(
@@ -96,8 +95,12 @@ def main(args):
     # Ensure the viz dir
     Path(viz_dir).mkdir(parents=True, exist_ok=True)
 
+    # Download models from HF
+    download_path = snapshot_download(repo_id="ds4sd/docling-models")
+    artifact_path = os.path.join(download_path, "model_artifacts/layout/beehive_v0.0.5")
+
     # Test the LayoutPredictor
-    demo(logger, ARTIFACT_PATH, num_threads, img_dir, viz_dir)
+    demo(logger, artifact_path, num_threads, img_dir, viz_dir)
 
 
 if __name__ == "__main__":

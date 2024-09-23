@@ -8,6 +8,8 @@ import numpy as np
 import pytest
 from PIL import Image
 
+from huggingface_hub import snapshot_download
+
 import docling_ibm_models.layoutmodel.layout_predictor as lp
 from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
 
@@ -17,16 +19,13 @@ def init() -> dict:
     r"""
     Initialize the testing environment
     """
+    # This config is missing the keys: "artifact_path", "info1.onnx_file", "info2.onnx_file"
     init = {
-        "artifact_path": "tests/test_data/model_artifacts/",
         "num_threads": 1,
         "test_imgs": [
             "tests/test_data/samples/ADS.2007.page_123.png",
         ],
         "info1": {
-            "onnx_file": os.path.join(
-                "tests/test_data/model_artifacts/", lp.MODEL_CHECKPOINT_FN
-            ),
             "intra_op_num_threads": 2,
             "providers": ["CPUExecutionProvider"],
             "use_cpu_only": True,
@@ -34,9 +33,6 @@ def init() -> dict:
             "threshold": 0.6,
         },
         "info2": {
-            "onnx_file": os.path.join(
-                "tests/test_data/model_artifacts/", lp.MODEL_CHECKPOINT_FN
-            ),
             "intra_op_num_threads": 1,
             "providers": ["CPUExecutionProvider"],
             "use_cpu_only": True,
@@ -45,6 +41,16 @@ def init() -> dict:
         },
         "pred_bboxes": 9,
     }
+
+    # Download models from HF
+    download_path = snapshot_download(repo_id="ds4sd/docling-models")
+    artifact_path = os.path.join(download_path, "model_artifacts/layout/beehive_v0.0.5")
+
+    # Add the missing config keys
+    init["artifact_path"] = artifact_path
+    init["info1"]["onnx_file"] = os.path.join(artifact_path, lp.MODEL_CHECKPOINT_FN)
+    init["info2"]["onnx_file"] = os.path.join(artifact_path, lp.MODEL_CHECKPOINT_FN)
+
     return init
 
 
