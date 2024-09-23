@@ -7,8 +7,10 @@ import json
 import os
 from pathlib import Path
 
+import pytest
 import cv2
 from PIL import Image, ImageDraw
+from huggingface_hub import snapshot_download
 
 from docling_ibm_models.tableformer.utils.app_profiler import AggProfiler
 import docling_ibm_models.tableformer.data_management.tf_predictor as tf_predictor
@@ -40,6 +42,7 @@ docling_api_data = {
     ],
 }
 
+# The config is missing the keys: "model.save_dir"
 test_config = {
     "dataset": {
         "type": "TF_prepared",
@@ -66,7 +69,7 @@ test_config = {
     "model": {
         "type": "TableModel04_rs",
         "name": "14_128_256_4_true",
-        "save_dir": "./tests/test_data/model_artifacts/",
+        # "save_dir": "./tests/test_data/model_artifacts/",
         "backbone": "resnet18",
         "enc_image_size": 28,
         "tag_embed_dim": 16,
@@ -459,7 +462,21 @@ def combine_checkpoint(save_dir):
     return 1
 
 
-def test_tf_predictor():
+@pytest.fixture(scope="module")
+def init() -> list[dict]:
+    r"""
+    Initialize the testing environment
+    """
+    # Download models from HF
+    download_path = snapshot_download(repo_id="ds4sd/docling-models")
+    save_dir = os.path.join(download_path, "model_artifacts/tableformer")
+
+    # Add the missing config keys
+    for config in configs:
+        config["model"]["save_dir"] = save_dir
+    return configs
+
+def test_tf_predictor(init):
     r"""
     Test the TFPredictor
     """
@@ -482,7 +499,7 @@ def test_tf_predictor():
         iocr_pages.append(iocr_page)
 
     # Loop over the test configs
-    for test_config in configs:
+    for test_config in init:
         # Check if the checkpoint file should be combined
         assert (
             combine_checkpoint(test_config["model"]["save_dir"]) >= 0
