@@ -1,3 +1,9 @@
+## [v1.3.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.3.0) - 2024-09-23
+
+### Feature
+
+* Extend the tests and demo to first download the model files from HF. Add the pytest in GitHub workflow ( #30) ([`79888d0`](https://github.com/DS4SD/docling-ibm-models/commit/79888d0b87172af43f2585b54e974e54130bab4e))
+
 ## [v1.2.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.2.1) - 2024-09-18
 
 ### Fix
