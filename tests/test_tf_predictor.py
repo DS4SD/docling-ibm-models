@@ -492,8 +492,8 @@ def test_tf_predictor(init):
         with open(table_json_fn, "r") as fp:
             iocr_page_raw = json.load(fp)
             iocr_page = iocr_page_raw["pages"][0]
+        # TODO(Nikos): Try to remove the opencv dependency
         iocr_page["image"] = cv2.imread(png_image_fn)
-        # page_image = cv2.imread(png_image_fn)
         iocr_page["png_image_fn"] = png_image_fn
         iocr_page["table_bboxes"] = table_bboxes_b
         iocr_pages.append(iocr_page)

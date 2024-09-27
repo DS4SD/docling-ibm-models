@@ -12,7 +12,6 @@ import numpy as np
 import torch
 
 import docling_ibm_models.tableformer.common as c
-import docling_ibm_models.tableformer.data_management.functional as F
 import docling_ibm_models.tableformer.data_management.transforms as T
 import docling_ibm_models.tableformer.settings as s
 import docling_ibm_models.tableformer.utils.utils as u
@@ -21,6 +20,9 @@ from docling_ibm_models.tableformer.data_management.matching_post_processor impo
 )
 from docling_ibm_models.tableformer.data_management.tf_cell_matcher import CellMatcher
 from docling_ibm_models.tableformer.models.common.base_model import BaseModel
+from docling_ibm_models.tableformer.models.table04_rs.tablemodel04_rs import (
+    TableModel04_rs,
+)
 from docling_ibm_models.tableformer.otsl import otsl_to_html
 from docling_ibm_models.tableformer.utils.app_profiler import AggProfiler
 
@@ -187,16 +189,7 @@ class TFPredictor:
         """
 
         self._model_type = self._config["model"]["type"]
-        # Added import here to avoid loading turbotransformer library unnecessarily
-        if self._model_type == "TableModel04_rs":
-            from docling_ibm_models.tableformer.models.table04_rs.tablemodel04_rs import (  # noqa
-                TableModel04_rs,
-            )
-        for candidate in BaseModel.__subclasses__():
-            if candidate.__name__ == self._model_type:
-                model = candidate(
-                    self._config, self._init_data, s.PREDICT_PURPOSE, self._device
-                )
+        model = TableModel04_rs(self._config, self._init_data, self._device)
 
         if model is None:
             err_msg = "Not able to initiate a model for {}".format(self._model_type)
@@ -376,66 +369,6 @@ class TFPredictor:
 
         return new_bboxes
 
-    def _pad_image(self, iocr_page):
-        r"""
-        Adds padding to the image
-
-        Parameters
-        ----------
-        iocr_page : dict
-            Docling provided table data
-
-        Returns
-        -------
-        new_im: PIL image
-            new, padded image
-        new_image_ratio : float
-            Ratio of padded image size to the original image size
-        """
-        _, old_iw, old_ih = iocr_page["image"].shape
-
-        margin_i = self._padding_size  # pixels
-
-        desired_iw = old_iw + (margin_i * 2)
-        desired_ih = old_ih + (margin_i * 2)
-
-        # Ratio of new image size to the original image size
-        new_image_ratio = desired_iw / old_iw
-
-        bcolor = (255, 255, 255)
-        # Create empty canvas of background color and desired size
-        padded_image = F.pad(
-            iocr_page["image"],
-            (desired_iw, desired_ih, desired_iw, desired_ih),
-            fill=bcolor,
-        )
-        return padded_image, new_image_ratio
-
-    def _pre_process_image(self, iocr_page):
-        r"""
-        Pre-process table image in memory, before doing prediction
-        Currently just removes from the image separate PDF cells that only contain "$" sign
-        This is done to remove model confusion when dealing with financial reports
-
-        Parameters
-        ----------
-        iocr_page : dict
-            Docling provided table data
-
-        Returns
-        -------
-        iocr_page["image"] : PIL image
-            updated table image with "$" repainted
-        new_image_ratio : float
-            Ratio of padded image size to the original image size
-        """
-
-        new_image_ratio = 1.0
-
-        ic, iw, ih = iocr_page["image"].shape
-
-        return iocr_page["image"], new_image_ratio
-
     def _merge_tf_output(self, docling_output, pdf_cells):
         tf_output = []
         tf_cells_map = {}
@@ -519,6 +452,7 @@ class TFPredictor:
             sf = r
             dim = (width, int(h * r))
         # resize the image
+        # TODO(Nikos): Try to remove cv2 dependency
         resized = cv2.resize(image, dim, interpolation=inter)
         # return the resized image
         return resized, sf
