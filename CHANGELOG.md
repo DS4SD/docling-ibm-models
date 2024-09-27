@@ -1,3 +1,9 @@
+## [v1.3.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.3.1) - 2024-09-27
+
+### Fix
+
+* Pinned opencv-python-headless to version "4.6.0.66" ([#34](https://github.com/DS4SD/docling-ibm-models/issues/34)) ([`484340f`](https://github.com/DS4SD/docling-ibm-models/commit/484340fd1a3a7a31babaf2306496c083b56e4c50))
+
 ## [v1.3.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.3.0) - 2024-09-23
 
 ### Feature
