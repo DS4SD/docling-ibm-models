@@ -1,3 +1,9 @@
+## [v1.3.2](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.3.2) - 2024-09-30
+
+### Fix
+
+* Remove left-over code which is not needed for prediction ([#35](https://github.com/DS4SD/docling-ibm-models/issues/35)) ([`b6ba0c7`](https://github.com/DS4SD/docling-ibm-models/commit/b6ba0c7749177eb25c3ef79188f2508be211150a))
+
 ## [v1.3.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.3.1) - 2024-09-27
 
 ### Fix
