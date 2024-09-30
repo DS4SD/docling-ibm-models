@@ -26,7 +26,7 @@ class TableModel04_rs(BaseModel, nn.Module):
     TableNet04Model encoder, dual-decoder model with OTSL+ support
     """
 
-    def __init__(self, config, init_data, purpose, device):
+    def __init__(self, config, init_data, device):
         super(TableModel04_rs, self).__init__(config, init_data, device)
 
         self._prof = config["predict"].get("profiling", False)
