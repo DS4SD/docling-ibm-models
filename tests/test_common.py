@@ -2,7 +2,11 @@
 # Copyright IBM Corp. 2024 - 2024
 # SPDX-License-Identifier: MIT
 #
+import json
+import tempfile
+
 import docling_ibm_models.tableformer.common as c
+
 
 test_config_a = {
     "base_dir": "./tests/test_data/",
@@ -70,3 +74,16 @@ def test_config_validation():
                 assert val, "Valid configuration didn't pass the validation test"
         except AssertionError:
             assert i == 2, "Configuration validation error"
+
+def test_read_config():
+    r"""
+    Testing the read_config() function
+    """
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as fp:
+        # Write a tmp file
+        json.dump(test_config_a, fp)
+        fp.close()
+
+        # Read the tmp file and extract the config
+        config = c.read_config(fp.name)
+        assert isinstance(config, dict)

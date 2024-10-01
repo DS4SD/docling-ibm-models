@@ -48,6 +48,16 @@ def validate_config(config):
     return True
 
 
+def read_config(config_filename):
+    with open(config_filename, "r") as fd:
+        config = json.load(fd)
+
+    # Validate the config file
+    validate_config(config)
+
+    return config
+
+
 def safe_get_parameter(input_dict, index_path, default=None, required=False):
     r"""
     Safe get parameter from a nested dictionary.
