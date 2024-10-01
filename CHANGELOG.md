@@ -1,3 +1,9 @@
+## [v1.3.3](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.3.3) - 2024-10-01
+
+### Fix
+
+* Put back in common.py the function `read_config()`. Extend the unit tests. ([#36](https://github.com/DS4SD/docling-ibm-models/issues/36)) ([`d0bdb22`](https://github.com/DS4SD/docling-ibm-models/commit/d0bdb22b1535bfe118e7ec88ea9f2b17ca4469e8))
+
 ## [v1.3.2](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.3.2) - 2024-09-30
 
 ### Fix
