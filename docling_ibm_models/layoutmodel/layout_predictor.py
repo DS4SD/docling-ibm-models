@@ -6,11 +6,10 @@ import os
 from collections.abc import Iterable
 from typing import Union
 
+import numpy as np
 import torch
 import torchvision.transforms as T
-
 from PIL import Image
-import numpy as np
 
 MODEL_CHECKPOINT_FN = "model.pt"
 DEFAULT_NUM_THREADS = 4
@@ -165,7 +164,7 @@ class LayoutPredictor:
             # Filter out blacklisted classes
             label_idx = int(label_idx.item())
             score = float(score.item())
-            label = self._classes_map[label_idx]
+            label = self._classes_map[label_idx + 1]
             if label in self._black_classes:
                 continue
 
