@@ -80,9 +80,7 @@ class LayoutPredictor:
         self._use_cpu_only = use_cpu_only or ("USE_CPU_ONLY" in os.environ)
 
         # Decide the execution providers
-        if (
-            not self._use_cpu_only
-        ):
+        if not self._use_cpu_only:
             providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
         else:
             providers = ["CPUExecutionProvider"]
@@ -101,9 +99,7 @@ class LayoutPredictor:
 
         # Decide the execution providers
         # TODO check below
-        if (
-            not self._use_cpu_only
-        ):
+        if not self._use_cpu_only:
             providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
         else:
             providers = ["CPUExecutionProvider"]
@@ -153,10 +149,12 @@ class LayoutPredictor:
         w, h = page_img.size
         orig_size = torch.tensor([w, h])[None]
 
-        transforms = T.Compose([
-            T.Resize((640, 640)),
-            T.ToTensor(),
-        ])
+        transforms = T.Compose(
+            [
+                T.Resize((640, 640)),
+                T.ToTensor(),
+            ]
+        )
         img = transforms(page_img)[None]
         # Predict
         with torch.no_grad():
