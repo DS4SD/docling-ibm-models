@@ -1,3 +1,13 @@
+## [v2.0.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.0) - 2024-10-03
+
+### Feature
+
+* Release v2.0.0 with only torch models ([#38](https://github.com/DS4SD/docling-ibm-models/issues/38)) ([`8719555`](https://github.com/DS4SD/docling-ibm-models/commit/8719555d661dde491667e76d3de6abcd3d1b25bd))
+
+### Breaking
+
+* release v2.0.0 with only torch models ([#38](https://github.com/DS4SD/docling-ibm-models/issues/38)) ([`8719555`](https://github.com/DS4SD/docling-ibm-models/commit/8719555d661dde491667e76d3de6abcd3d1b25bd))
+
 ## [v1.4.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.4.0) - 2024-10-03
 
 ### Feature
