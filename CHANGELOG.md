@@ -1,3 +1,9 @@
+## [v1.4.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.4.0) - 2024-10-03
+
+### Feature
+
+* Migration from onnx to pytorch script ([#37](https://github.com/DS4SD/docling-ibm-models/issues/37)) ([`59e2941`](https://github.com/DS4SD/docling-ibm-models/commit/59e2941f41e4d419ab650d58e7ca1a667ae31002))
+
 ## [v1.3.3](https://github.com/DS4SD/docling-ibm-models/releases/tag/v1.3.3) - 2024-10-01
 
 ### Fix
