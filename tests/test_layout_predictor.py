@@ -19,22 +19,18 @@ def init() -> dict:
     r"""
     Initialize the testing environment
     """
-    # This config is missing the keys: "artifact_path", "info1.onnx_file", "info2.onnx_file"
+    # This config is missing the keys: "artifact_path", "info1.torch_file", "info2.torch_file"
     init = {
         "num_threads": 1,
         "test_imgs": [
             "tests/test_data/samples/ADS.2007.page_123.png",
         ],
         "info1": {
-            "intra_op_num_threads": 2,
-            "providers": ["CPUExecutionProvider"],
             "use_cpu_only": True,
             "image_size": 640,
             "threshold": 0.6,
         },
         "info2": {
-            "intra_op_num_threads": 1,
-            "providers": ["CPUExecutionProvider"],
             "use_cpu_only": True,
             "image_size": 640,
             "threshold": 0.6,
@@ -44,12 +40,12 @@ def init() -> dict:
 
     # Download models from HF
     download_path = snapshot_download(repo_id="ds4sd/docling-models")
-    artifact_path = os.path.join(download_path, "model_artifacts/layout/beehive_v0.0.5")
+    artifact_path = os.path.join(download_path, "model_artifacts/layout/beehive_v0.0.5_pt")
 
     # Add the missing config keys
     init["artifact_path"] = artifact_path
-    init["info1"]["onnx_file"] = os.path.join(artifact_path, lp.MODEL_CHECKPOINT_FN)
-    init["info2"]["onnx_file"] = os.path.join(artifact_path, lp.MODEL_CHECKPOINT_FN)
+    init["info1"]["torch_file"] = os.path.join(artifact_path, lp.MODEL_CHECKPOINT_FN)
+    init["info2"]["torch_file"] = os.path.join(artifact_path, lp.MODEL_CHECKPOINT_FN)
 
     return init
 
@@ -66,7 +62,7 @@ def test_layoutpredictor(init: dict):
 
     # Initialize LayoutPredictor with optional parameters
     lpredictor = LayoutPredictor(
-        init["artifact_path"], num_threads=init["num_threads"], use_cpu_only=True
+        init["artifact_path"], use_cpu_only=True
     )
     assert init["info2"] == lpredictor.info()
 
