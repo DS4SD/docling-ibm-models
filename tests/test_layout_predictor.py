@@ -26,13 +26,11 @@ def init() -> dict:
             "tests/test_data/samples/ADS.2007.page_123.png",
         ],
         "info1": {
-            "providers": ["CPUExecutionProvider"],
             "use_cpu_only": True,
             "image_size": 640,
             "threshold": 0.6,
         },
         "info2": {
-            "providers": ["CPUExecutionProvider"],
             "use_cpu_only": True,
             "image_size": 640,
             "threshold": 0.6,

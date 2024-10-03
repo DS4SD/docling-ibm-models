@@ -78,31 +78,15 @@ class LayoutPredictor:
         self._size = np.asarray([[self._image_size, self._image_size]], dtype=np.int64)
         self._use_cpu_only = use_cpu_only or ("USE_CPU_ONLY" in os.environ)
 
-        # Decide the execution providers
-        if not self._use_cpu_only:
-            providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
-        else:
-            providers = ["CPUExecutionProvider"]
-        self._providers = providers
-
         # Model file
         self._torch_fn = os.path.join(artifact_path, MODEL_CHECKPOINT_FN)
         if not os.path.isfile(self._torch_fn):
             raise FileNotFoundError("Missing torch file: {}".format(self._torch_fn))
 
         # Get env vars
-        self._use_cpu_only = use_cpu_only or ("USE_CPU_ONLY" in os.environ)
         if num_threads is None:
             num_threads = int(os.environ.get("OMP_NUM_THREADS", DEFAULT_NUM_THREADS))
         self._num_threads = num_threads
-
-        # Decide the execution providers
-        # TODO check below
-        if not self._use_cpu_only:
-            providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
-        else:
-            providers = ["CPUExecutionProvider"]
-        self._providers = providers
 
         self.model = torch.jit.load(self._torch_fn)
 
@@ -113,7 +97,6 @@ class LayoutPredictor:
         info = {
             "torch_file": self._torch_fn,
             "use_cpu_only": self._use_cpu_only,
-            "providers": self._providers,
             "image_size": self._image_size,
             "threshold": self._threshold,
         }
