@@ -30,7 +30,10 @@ torchvision = [
   {markers = "sys_platform != 'darwin' or platform_machine != 'x86_64'", version = "^0"},
   {markers = "sys_platform == 'darwin' and platform_machine == 'x86_64'", version = "~0.17.2"}
 ]
-numpy = "^1.24.4"
+numpy = [
+    { version = "^2.1.0", markers = 'python_version >= "3.13"' },
+    { version = "^1.24.4", markers = 'python_version < "3.13"' },
+]
 lxml = "^4.9.1"
 jsonlines = "^3.1.0"
 Pillow = "^10.0.0"
