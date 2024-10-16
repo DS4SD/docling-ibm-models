@@ -1,3 +1,9 @@
+## [v2.0.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.1) - 2024-10-16
+
+### Fix
+
+* Numpy with python 3.13 support ([#39](https://github.com/DS4SD/docling-ibm-models/issues/39)) ([`4fddc45`](https://github.com/DS4SD/docling-ibm-models/commit/4fddc45cd7b7684a28b5556cbf0681540d5d4010))
+
 ## [v2.0.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.0) - 2024-10-03
 
 ### Feature
