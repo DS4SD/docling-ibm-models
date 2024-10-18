@@ -78,13 +78,23 @@ def test_layoutpredictor(init: dict):
     # Predict on the test image
     for img_fn in init["test_imgs"]:
         with Image.open(img_fn) as img:
+            w, h = img.size
             # Load images as PIL objects
             for i, pred in enumerate(lpredictor.predict(img)):
                 print("PIL pred: {}".format(pred))
+                assert pred["l"] >= 0 and pred["l"] <= w
+                assert pred["t"] >= 0 and pred["t"] <= h
+                assert pred["r"] >= 0 and pred["r"] <= w
+                assert pred["b"] >= 0 and pred["b"] <= h
+
             assert i + 1 == init["pred_bboxes"]
 
             # Load images as numpy arrays
             np_arr = np.asarray(img)
             for i, pred in enumerate(lpredictor.predict(np_arr)):
                 print("numpy pred: {}".format(pred))
+                assert pred["l"] >= 0 and pred["l"] <= w
+                assert pred["t"] >= 0 and pred["t"] <= h
+                assert pred["r"] >= 0 and pred["r"] <= w
+                assert pred["b"] >= 0 and pred["b"] <= h
             assert i + 1 == init["pred_bboxes"]

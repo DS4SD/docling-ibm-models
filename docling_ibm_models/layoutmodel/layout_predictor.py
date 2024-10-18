@@ -153,11 +153,15 @@ class LayoutPredictor:
 
             # Check against threshold
             if score > self._threshold:
+                l = min(w, max(0, box[0]))
+                t = min(h, max(0, box[1]))
+                r = min(w, max(0, box[2]))
+                b = min(h, max(0, box[3]))
                 yield {
-                    "l": box[0],
-                    "t": box[1],
-                    "r": box[2],
-                    "b": box[3],
+                    "l": l,
+                    "t": t,
+                    "r": r,
+                    "b": b,
                     "label": label,
                     "confidence": score,
                 }
