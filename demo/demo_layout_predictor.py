@@ -97,7 +97,7 @@ def main(args):
 
     # Download models from HF
     download_path = snapshot_download(repo_id="ds4sd/docling-models")
-    artifact_path = os.path.join(download_path, "model_artifacts/layout/beehive_v0.0.5")
+    artifact_path = os.path.join(download_path, "model_artifacts/layout/beehive_v0.0.5_pt")
 
     # Test the LayoutPredictor
     demo(logger, artifact_path, num_threads, img_dir, viz_dir)
