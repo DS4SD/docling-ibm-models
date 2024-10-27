@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: MIT
 #
 import os
+
+import copy
+
 from collections.abc import Iterable
 from typing import Union
 
@@ -22,6 +25,16 @@ class PageElement:
 
     label: str # layout label
 
+    def __lt__(self, other):
+        if self.pid==other.pid:
+
+            if self.overlaps_x(other):
+                return self.y0 > other.y0
+            else:
+                return self.x0 < other.x0
+        else:
+            return self.pid<other.pid
+        
     def follows_maintext_order(self, rhs: PageElement) -> bool:
         return (self.cid+1==rhs.cid)
 
@@ -49,22 +62,6 @@ class PageElement:
     def is_strictly_left_of(self, rhs: PageElement) -> bool:
         return (self.x1+self.eps<rhs.x0)
 
-    """
-    def is_right_of(self, rhs: PageElement) -> bool:
-        return True
-
-    def is_strictly_right_of(self, rhs: PageElement) -> bool:
-        return True
-    """
-
-    """
-    def is_below(self, rhs: PageElement) -> bool:
-        return True
-    
-    def is_strictly_below(self, rhs: PageElement) -> bool:
-        return True
-    """
-    
     def is_above(self, rhs: PageElement) -> bool:
         return (self.y0>rhs.y0)
     
@@ -99,14 +96,33 @@ class ReadingOrder:
 
         for pid, page_elems in doc_elems.items():
 
-             h2i_map, i2h_map = self.init_h2i_map(page_elems)
+             h2i_map, i2h_map = self._init_h2i_map(page_elems)
 
-             l2r_map, r2l_map = self.init_l2r_map(page_elems)
+             l2r_map, r2l_map = self._init_l2r_map(page_elems)
 
-             up_map, dn_map = self.init_ud_maps(page_elems)
+             up_map, dn_map = self._init_ud_maps(page_elems, l2r_map)
 
-             heads = self.find_heads(page_elems, h2i_map, i2h_map, up_map, dn_map)
+             if True:
+                 dilated_page_elems = copy.deepcopy(page_elems) # deep-copy
+                 self._do_horizontal_dilation(page_elems, dilated_page_elems, up_map, dn_map);
+      
+                 # redo with dilated provs
+                 up_map={}
+                 dn_map={}
+                 all_up_map={}
+                 self._init_ud_maps_v2(dilated_page_elems, l2r_map, r2l_map, up_map, dn_map)
              
+            heads = self._find_heads(page_elems, h2i_map, i2h_map, up_map, dn_map)
+
+            self._sort_ud_maps(provs, h2i_map, i2h_map, up_map, dn_map);
+            order = self._find_order(provs, heads, up_map, dn_map);
+             
+            sorted_page_elems=[];
+            for ind in order:
+                sorted_page_elems.append(self.page_elems[ind]);
+            
+            doc_elems[pid] = result
+            
         doc = DoclingDocument()
         return doc
 
@@ -153,10 +169,10 @@ class ReadingOrder:
                     r2l_map[j] = i;
                 
         return l2r_map, r2l_map
-        
-    def _init_ud_maps(self, page_elems: List[PageElement]):
-        up_map = {}
-        dn_map = {}
+    
+    def _init_ud_maps(self, page_elems: List[PageElement], l2r_map: Dict[int, int]):
+        up_map: dict[int, list[int]] = {}
+        dn_map: dict[int, list[int]] = {}
 
         for i,pelem_i in enumerate(page_elems):
             up_map[i] = []
@@ -192,9 +208,9 @@ class ReadingOrder:
                         
                         is_i_just_above_j:bool = (not (i_above_w and w_above_j));
 
-                if(is_i_just_above_j):
+                if is_i_just_above_j:
 
-                    while(i in l2r_map):
+                    while i in l2r_map:
                         i = l2r_map[i];
 
                     dn_map[i].append(j)
@@ -202,19 +218,125 @@ class ReadingOrder:
                         
         return up_map, dn_map
 
-    def find_heads(self, page_elems, h2i_map, i2h_map, up_map, dn_map):
+    def _do_horizontal_dilation(self, page_elems, dilated_page_elems, up_map, dn_map):
+        dilated_page_elems = page_elems # // deep-copy
+
+        for i,pelem_i in enumerate(dilated_page_elems):
+
+	    x0 = pelem_i.x0;
+	    y0 = pelem_i.y0;
+	        
+	    x1 = pelem_i.x1;
+	    y1 = pelem_i.y1;
+                
+	    if i in up_map:
+	        pelem_up = page_elems[up_map[i][0]]]
+                    
+	        x0 = min(x0, pelem_up.x0);
+	        x1 = max(x1, pelem_up.x1);
+
+	    if i in dn_map:
+	        pelem_dn = page_elems[dn_map[i][0]]]
+                    
+	        x0 = min(x0, pelem_dn.x0);
+	        x1 = max(x1, pelem_dn.x1);
+
+	    pelem_i.x0 = x0
+            pelem_i.x1 = x1
+	  
+	    overlaps_with_rest:bool = False;
+            for j,pelem_j in enumerate(page_elems):
+
+	        if i==j:
+		    continue;
+                    
+	        if not overlaps_with_rest:
+		    overlaps_with_rest = pelem_j.overlaps(pelem_i);
+
+	    # update
+            if(not overlaps_with_rest):
+	        dilated_page_elems[i].x0 = x0
+                dilated_page_elems[i].y0 = y0
+                dilated_page_elems[i].x1 = x1
+                dilated_page_elems[i].y1 = y1
+
+    def _find_heads(self, page_elems, h2i_map, i2h_map, up_map, dn_map):
         heads:list[int] = []
 
-        head_provs = []
+        head_page_elems = []
         for key,vals in up_map.items():
             if(len(vals)==0):
-                head_provs.append(page_elems[key])
+                head_page_elems.append(page_elems[key])
 
-        sorted(head_provs, key=lambda);
+        sorted(head_page_elems, key=lambda);
 
-        for item in head_provs.items():
+        for item in head_page_elems:
             heads.append(h2i_map[item.cid))
 
         return heads
         
+    def _sort_ud_maps(self, provs, h2i_map, i2h_map, up_map, dn_map):
+        for ind_i,vals in dn_map.items():
+            
+            child_provs={};
+            for ind_j in vals:
+                child_provs.push_back(provs[ind_j]);
+
+            sorted(child_provs)
+
+            dn_map[ind_i] = []
+            for child in child_provs:
+                dn_map[ind_i].append(h2i_map[child.cid]);
+
+    def _find_order(self, provs, heads, up_map, dn_map):
+        order: list[int] = [];
+
+        visited: list[bool] = [False for _ in provs];
         
+        for j in heads:
+
+            if not visited[j]:
+	        
+	        order.append(j);
+	        visited[j] = true;
+	    
+                self.depth_first_search_downwards(j, order, visited, dn_map, up_map);
+                
+        if len(order)!=len(provs):
+            _log.error("something went wrong")
+
+        return order;
+
+    def _depth_first_search_upwards(j: int,
+				   order: list[int],
+				   visited: list[bool],
+				   dn_map: dict[int, list[int]],
+				   up_map: dict[int, list[int]]):
+        """depth_first_search_upwards"""
+        
+        k = j
+    
+        auto& inds = up_map.at(j);
+        for ind in inds:
+	    if not visited[ind]:
+	        return self.depth_first_search_upwards(ind, order, visited, dn_map, up_map)
+    
+        return k;
+  
+    def _depth_first_search_downwards(j: int,
+				     order: list[int],
+				     visited: list[bool],
+				     dn_map: dict[int, list[int]],
+				     up_map: dict[int, list[int]]):
+        """depth_first_search_downwards"""
+
+        inds: list[int] = dn_map[j]
+
+        for i in inds:
+	    k:int = self._depth_first_search_upwards(i, order, visited, dn_map, up_map)
+	
+            if not visited[k]:
+                order.append(k)
+                visited[k] = True
+
+                self._depth_first_search_downwards(k, order, visited, dn_map, up_map);
