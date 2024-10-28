@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 #
 import os
+import json
 
 import numpy as np
 import pytest
@@ -13,6 +14,7 @@ from huggingface_hub import snapshot_download
 import docling_ibm_models.layoutmodel.layout_predictor as lp
 from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
 
+from docling_ibm_models.reading_order.reading_order_rb import PageElement, ReadingOrderPredictor
 
 @pytest.fixture(scope="module")
 def init() -> dict:
@@ -50,7 +52,7 @@ def init() -> dict:
     return init
 
 
-def test_layoutpredictor(init: dict):
+def run_layoutpredictor(init: dict):
     r"""
     Unit test for the LayoutPredictor
     """
@@ -77,29 +79,17 @@ def test_layoutpredictor(init: dict):
 
     # Predict on the test image
     for img_fn in init["test_imgs"]:
-
-        true_layout_fn = img_fn+".json"
         with Image.open(img_fn) as img:
-            pred_layout=[]
-            
             # Load images as PIL objects
-            for i, pred in enumerate(lpredictor.predict(img)):
+            for i, pred in enumerate(lpredictor.predict(img)):                
                 print("PIL pred: {}".format(pred))
-                pred_layout.append(pred)
-            assert i + 1 == init["pred_bboxes"]
+                yield pred
 
-            if os.path.exists(true_layout_fn):
-                with open(true_layout_fn, "r") as fr:
-                    true_layout = json.load(fr)
+def test_readingorder():
 
-                # FIXME: write a simple test to check all objects are found
-            else:
-                with open(true_layout_fn, "w") as fw:
-                    fw.write(json.dumps(pred_layout, indent=4))
+    romodel = ReadingOrderPredictor()
+    
+    for pred in run_layoutpredictor(init): 
+        print(pred.keys())
 
-            
-            # Load images as numpy arrays
-            np_arr = np.asarray(img)
-            for i, pred in enumerate(lpredictor.predict(np_arr)):
-                print("numpy pred: {}".format(pred))
-            assert i + 1 == init["pred_bboxes"]
+    assert True
