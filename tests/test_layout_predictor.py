@@ -77,12 +77,27 @@ def test_layoutpredictor(init: dict):
 
     # Predict on the test image
     for img_fn in init["test_imgs"]:
+
+        true_layout_fn = img_fn+".json"
         with Image.open(img_fn) as img:
+            pred_layout=[]
+            
             # Load images as PIL objects
             for i, pred in enumerate(lpredictor.predict(img)):
                 print("PIL pred: {}".format(pred))
+                pred_layout.append(pred)
             assert i + 1 == init["pred_bboxes"]
 
+            if os.path.exists(true_layout_fn):
+                with open(true_layout_fn, "r") as fr:
+                    true_layout = json.load(fr)
+
+                # FIXME: write a simple test to check all objects are found
+            else:
+                with open(true_layout_fn, "w") as fw:
+                    fw.write(json.dumps(pred_layout, indent=4))
+
+            
             # Load images as numpy arrays
             np_arr = np.asarray(img)
             for i, pred in enumerate(lpredictor.predict(np_arr)):
