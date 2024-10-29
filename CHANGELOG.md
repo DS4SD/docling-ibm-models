@@ -1,3 +1,9 @@
+## [v2.0.2](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.2) - 2024-10-29
+
+### Fix
+
+* **LayoutPredictor:** Ensure that the predicted bboxes are minmaxed inside the image boundaries ([#42](https://github.com/DS4SD/docling-ibm-models/issues/42)) ([`216cee0`](https://github.com/DS4SD/docling-ibm-models/commit/216cee081a1ae8be264074e6d54cff27bf6984cf))
+
 ## [v2.0.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.1) - 2024-10-16
 
 ### Fix
