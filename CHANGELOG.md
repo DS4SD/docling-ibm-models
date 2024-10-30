@@ -1,3 +1,9 @@
+## [v2.0.3](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.3) - 2024-10-30
+
+### Fix
+
+* Simplify torch dependencies in the wheels ([#45](https://github.com/DS4SD/docling-ibm-models/issues/45)) ([`bca09f8`](https://github.com/DS4SD/docling-ibm-models/commit/bca09f8331934120e6f542d15aa871f1153ae140))
+
 ## [v2.0.2](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.2) - 2024-10-29
 
 ### Fix
