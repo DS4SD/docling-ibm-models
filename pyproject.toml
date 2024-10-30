@@ -22,14 +22,8 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-torch = [
-  {markers = "sys_platform != 'darwin' or platform_machine != 'x86_64'", version = "^2.2.2"},
-  {markers = "sys_platform == 'darwin' and platform_machine == 'x86_64'", version = "~2.2.2"}
-]
-torchvision = [
-  {markers = "sys_platform != 'darwin' or platform_machine != 'x86_64'", version = "^0"},
-  {markers = "sys_platform == 'darwin' and platform_machine == 'x86_64'", version = "~0.17.2"}
-]
+torch = "^2.2.2"
+torchvision = "^0"
 numpy = [
     { version = "^2.1.0", markers = 'python_version >= "3.13"' },
     { version = "^1.24.4", markers = 'python_version < "3.13"' },
@@ -42,7 +36,7 @@ mean_average_precision = "^2021.4.26.0"
 opencv-python-headless = "^4.6.0.66"
 huggingface_hub = ">=0.23,<1"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 black = {extras = ["jupyter"], version = "^24.4.2"}
 pytest = "^7.2.2"
 pre-commit = "^3.7.1"
@@ -56,9 +50,21 @@ pytest-flake8 = "^1.1.0"
 types-requests = "^2.31.0.2"
 flake8-pyproject = "^1.2.3"
 pylint = "^2.17.5"
-
-[tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
+
+[tool.poetry.group.mac_intel]
+optional = true
+
+[tool.poetry.group.mac_intel.dependencies]
+torch = [
+  {markers = "sys_platform != 'darwin' or platform_machine != 'x86_64'", version = "^2.2.2"},
+  {markers = "sys_platform == 'darwin' and platform_machine == 'x86_64'", version = "~2.2.2"}
+]
+torchvision = [
+  {markers = "sys_platform != 'darwin' or platform_machine != 'x86_64'", version = "^0"},
+  {markers = "sys_platform == 'darwin' and platform_machine == 'x86_64'", version = "~0.17.2"}
+]
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

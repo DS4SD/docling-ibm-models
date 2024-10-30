@@ -53,6 +53,14 @@ To update or add new dependencies from `pyproject.toml`, rebuild `poetry.lock`
 poetry update
 ```
 
+#### MacOS Intel
+
+When in development mode on MacOS with Intel chips, one can use compatible dependencies with
+
+```console
+poetry update --with mac_intel
+```
+
 
 ## Pipeline Overview
 ![Architecture](docs/tablemodel_overview_color.png)
