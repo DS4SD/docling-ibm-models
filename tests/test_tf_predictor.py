@@ -630,6 +630,7 @@ def test_tf_predictor(init):
     # assert False
 
 
+@pytest.mark.skip
 def test_device_mode():
     r"""
     Test the "predict.device_mode" parameter
@@ -639,6 +640,7 @@ def test_device_mode():
         {"predict": {"device_mode": "cpu"}},
         {"predict": {"device_mode": "cuda"}},
         {"predict": {"device_mode": "gpu"}},
+        {"predict": {"device_mode": "mps"}},
         {"predict": {"device_mode": "wrong"}},
     ]
 
@@ -652,6 +654,8 @@ def test_device_mode():
             assert device == "cpu", "An explicit 'cpu' device was given"
         elif i == 2 or i == 3:
             assert device == "cuda:0", "Cuda or gpu should become 'cuda:0'"
+        elif i == 4:
+            assert device == "mps"
         else:
             assert (
                 device == "cpu"

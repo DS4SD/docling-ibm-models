@@ -81,18 +81,38 @@ def otsl_sqr_chk(rs_list, logdebug):
 
 
 def decide_device(config: dict) -> str:
-    r"""
+    """
     Decide the inference device based on the "predict.device_mode" parameter
     """
     device_mode = config["predict"].get("device_mode", "cpu")
-    num_gpus = torch.cuda.device_count()
+
+    # Check CUDA availability
+    has_cuda = torch.cuda.device_count() > 0
+
+    # Check MPS availability
+    has_mps = (torch.backends.mps.is_built() and
+               torch.backends.mps.is_available())
 
     if device_mode == "auto":
-        device = "cuda:0" if num_gpus > 0 else "cpu"
+        if has_cuda:
+            device = "cuda:0"
+        elif has_mps:
+            device = "mps"
+        else:
+            device = "cpu"
     elif device_mode in ["gpu", "cuda"]:
-        device = "cuda:0"
+        if has_cuda:
+            device = "cuda:0"
+        else:
+            raise RuntimeError("CUDA device requested but not available")
+    elif device_mode == "mps":
+        if has_mps:
+            device = "mps"
+        else:
+            raise RuntimeError("MPS device requested but not available")
     else:
         device = "cpu"
+
     return device
 
 

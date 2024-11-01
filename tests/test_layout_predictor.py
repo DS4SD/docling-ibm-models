@@ -26,12 +26,7 @@ def init() -> dict:
             "tests/test_data/samples/ADS.2007.page_123.png",
         ],
         "info1": {
-            "use_cpu_only": True,
-            "image_size": 640,
-            "threshold": 0.6,
-        },
-        "info2": {
-            "use_cpu_only": True,
+            "device": "cpu",
             "image_size": 640,
             "threshold": 0.6,
         },
@@ -45,7 +40,6 @@ def init() -> dict:
     # Add the missing config keys
     init["artifact_path"] = artifact_path
     init["info1"]["torch_file"] = os.path.join(artifact_path, lp.MODEL_CHECKPOINT_FN)
-    init["info2"]["torch_file"] = os.path.join(artifact_path, lp.MODEL_CHECKPOINT_FN)
 
     return init
 
@@ -55,16 +49,11 @@ def test_layoutpredictor(init: dict):
     Unit test for the LayoutPredictor
     """
     # Initialize LayoutPredictor with envvars
-    os.environ["USE_CPU_ONLY"] = ""
+    os.environ["TORCH_DEVICE"] = "cpu"
     os.environ["OMP_NUM_THREADS"] = "2"
     lpredictor = LayoutPredictor(init["artifact_path"])
     assert init["info1"] == lpredictor.info()
 
-    # Initialize LayoutPredictor with optional parameters
-    lpredictor = LayoutPredictor(
-        init["artifact_path"], use_cpu_only=True
-    )
-    assert init["info2"] == lpredictor.info()
 
     # Unsupported input image
     is_exception = False
