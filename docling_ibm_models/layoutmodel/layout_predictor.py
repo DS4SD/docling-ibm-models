@@ -97,8 +97,7 @@ class LayoutPredictor:
             torch.set_num_threads(self._num_threads)
 
         # Load model and move to device
-        self.model = torch.jit.load(self._torch_fn)
-        self.model.to(self.device)
+        self.model = torch.jit.load(self._torch_fn, map_location=self.device)
         self.model.eval()
 
     def info(self) -> dict:
