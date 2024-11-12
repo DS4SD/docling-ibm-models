@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 #
 import os
+import json
 
 import numpy as np
 import pytest
@@ -77,7 +78,7 @@ def test_layoutpredictor(init: dict):
 
     # Predict on the test image
     for img_fn in init["test_imgs"]:
-
+        
         true_layout_fn = img_fn+".json"
         with Image.open(img_fn) as img:
             pred_layout=[]
@@ -85,7 +86,14 @@ def test_layoutpredictor(init: dict):
             # Load images as PIL objects
             for i, pred in enumerate(lpredictor.predict(img)):
                 print("PIL pred: {}".format(pred))
-                pred_layout.append(pred)
+                pred_layout.append({
+                    "label": pred["label"],
+                    "t": pred["t"].item(),
+                    "b": pred["b"].item(),
+                    "l": pred["l"].item(),
+                    "r": pred["r"].item(),
+                })
+            print(pred_layout)
             assert i + 1 == init["pred_bboxes"]
 
             if os.path.exists(true_layout_fn):
@@ -96,7 +104,6 @@ def test_layoutpredictor(init: dict):
             else:
                 with open(true_layout_fn, "w") as fw:
                     fw.write(json.dumps(pred_layout, indent=4))
-
             
             # Load images as numpy arrays
             np_arr = np.asarray(img)

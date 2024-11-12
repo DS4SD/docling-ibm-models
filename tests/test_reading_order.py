@@ -4,6 +4,7 @@
 #
 import os
 import json
+import glob
 
 import numpy as np
 import pytest
@@ -24,9 +25,7 @@ def init() -> dict:
     # This config is missing the keys: "artifact_path", "info1.torch_file", "info2.torch_file"
     init = {
         "num_threads": 1,
-        "test_imgs": [
-            "tests/test_data/samples/ADS.2007.page_123.png",
-        ],
+        "test_imgs": sorted(glob.glob("tests/test_data/samples/*.png")),
         "info1": {
             "use_cpu_only": True,
             "image_size": 640,
@@ -39,7 +38,7 @@ def init() -> dict:
         },
         "pred_bboxes": 9,
     }
-
+    
     # Download models from HF
     download_path = snapshot_download(repo_id="ds4sd/docling-models")
     artifact_path = os.path.join(download_path, "model_artifacts/layout/beehive_v0.0.5_pt")
@@ -48,11 +47,11 @@ def init() -> dict:
     init["artifact_path"] = artifact_path
     init["info1"]["torch_file"] = os.path.join(artifact_path, lp.MODEL_CHECKPOINT_FN)
     init["info2"]["torch_file"] = os.path.join(artifact_path, lp.MODEL_CHECKPOINT_FN)
-
+    
     return init
 
 
-def run_layoutpredictor(init: dict):
+def test_readingorder(init: dict):
     r"""
     Unit test for the LayoutPredictor
     """
@@ -77,19 +76,36 @@ def run_layoutpredictor(init: dict):
         is_exception = True
     assert is_exception
 
-    # Predict on the test image
-    for img_fn in init["test_imgs"]:
-        with Image.open(img_fn) as img:
-            # Load images as PIL objects
-            for i, pred in enumerate(lpredictor.predict(img)):                
-                print("PIL pred: {}".format(pred))
-                yield pred
-
-def test_readingorder():
-
+    # Init the reading-order model
     romodel = ReadingOrderPredictor()
     
-    for pred in run_layoutpredictor(init): 
-        print(pred.keys())
+    # Predict on the test image
+    for img_fn in init["test_imgs"]:
+        print(img_fn)
+        
+        with Image.open(img_fn) as img:
+            pred_layout=[]
 
-    assert True
+            # Load images as PIL objects
+            for i, pred in enumerate(lpredictor.predict(img)):                
+                pred_layout.append({
+                    "label": pred["label"],
+                    "t": pred["t"].item(),
+                    "b": pred["b"].item(),
+                    "l": pred["l"].item(),
+                    "r": pred["r"].item(),
+                })
+            print(json.dumps(pred_layout, indent=2))
+
+            page_elements = []
+            for cid, item in enumerate(pred_layout):
+                page_elements.append(PageElement(cid=cid, pid=0,
+                                                 x0=item["l"], y0=item["r"],
+                                                 x1=item["b"], y1=item["t"],
+                                                 label=item["label"]))
+
+            print(page_elements)
+                
+            ordered_elements = romodel.predict_page(page_elements)
+
+            print(ordered_elements)

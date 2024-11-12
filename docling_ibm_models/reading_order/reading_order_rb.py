@@ -56,7 +56,18 @@ class PageElement:
 	        (rhs.y0<=self.y1 and self.y1<rhs.y1) );
 
     def overlaps_y_with_iou(self, rhs, iou:float) -> bool:
-        return False
+        if self.overlaps_y(rhs):
+            
+            u0 = min(self.y0, rhs.y0);
+            u1 = max(self.y1, rhs.y1);
+            
+            i0 = max(self.y0, rhs.y0);
+            i1 = min(self.y1, rhs.y1);
+            
+            iou_ = float(i1-i0)/float(u1-u0);
+            return (iou_)>iou;
+
+        return False;
 
     def is_left_of(self, rhs) -> bool:
         return (self.x0<rhs.x0)
@@ -100,26 +111,23 @@ class ReadingOrderPredictor:
 
         l2r_map, r2l_map = self._init_l2r_map(page_elems)
 
-        up_map, dn_map = self._init_ud_maps(page_elems, l2r_map)
+        up_map, dn_map = self._init_ud_maps(page_elems, l2r_map, r2l_map)
 
         if True:
             dilated_page_elems = copy.deepcopy(page_elems) # deep-copy
             self._do_horizontal_dilation(page_elems, dilated_page_elems, up_map, dn_map);
       
             # redo with dilated provs
-            up_map={}
-            dn_map={}
-            all_up_map={}
-            self._init_ud_maps_v2(dilated_page_elems, l2r_map, r2l_map, up_map, dn_map)
+            up_map, dn_map = self._init_ud_maps(dilated_page_elems, l2r_map, r2l_map)
             
         heads = self._find_heads(page_elems, h2i_map, i2h_map, up_map, dn_map)
             
-        self._sort_ud_maps(provs, h2i_map, i2h_map, up_map, dn_map);
-        order = self._find_order(provs, heads, up_map, dn_map);
+        self._sort_ud_maps(page_elems, h2i_map, i2h_map, up_map, dn_map);
+        order = self._find_order(page_elems, heads, up_map, dn_map);
         
         sorted_page_elems: list[PageElement] = [];
         for ind in order:
-            sorted_page_elems.append(self.page_elems[ind]);
+            sorted_page_elems.append(page_elems[ind]);
 
         return sorted_page_elems
 
@@ -163,13 +171,15 @@ class ReadingOrderPredictor:
 
                 if(pelem_i.follows_maintext_order(pelem_j) and
                    pelem_i.is_strictly_left_of(pelem_j) and
-                   pelem_i.overlaps_y(pelem_j, 0.8)):
+                   pelem_i.overlaps_y_with_iou(pelem_j, 0.8)):
                     l2r_map[i] = j;
                     r2l_map[j] = i;
                 
         return l2r_map, r2l_map
     
-    def _init_ud_maps(self, page_elems: list[PageElement], l2r_map: dict[int, int]):
+    def _init_ud_maps(self, page_elems: list[PageElement],
+                      l2r_map: dict[int, int],
+                      r2l_map: dict[int, int]):
         up_map: dict[int, list[int]] = {}
         dn_map: dict[int, list[int]] = {}
 
@@ -179,7 +189,7 @@ class ReadingOrderPredictor:
 
         for j,pelem_j in enumerate(page_elems):
 
-            if(j in r2l_map):
+            if j in r2l_map:
                 i = r2l_map[j]
 
                 dn_map[i] = [j]
@@ -228,13 +238,13 @@ class ReadingOrderPredictor:
             x1 = pelem_i.x1;
             y1 = pelem_i.y1;
             
-            if i in up_map:
+            if i in up_map and len(up_map[i])>0:
                 pelem_up = page_elems[up_map[i][0]]
                 
                 x0 = min(x0, pelem_up.x0)
                 x1 = max(x1, pelem_up.x1)
 
-            if i in dn_map:
+            if i in dn_map and len(dn_map[i])>0:
                 pelem_dn = page_elems[dn_map[i][0]]
                 
                 x0 = min(x0, pelem_dn.x0)
@@ -297,19 +307,19 @@ class ReadingOrderPredictor:
             if not visited[j]:
 	        
                 order.append(j)
-                visited[j] = true	    
-                self.depth_first_search_downwards(j, order, visited, dn_map, up_map);
+                visited[j] = True	    
+                self._depth_first_search_downwards(j, order, visited, dn_map, up_map);
                 
         if len(order)!=len(provs):
             _log.error("something went wrong")
 
         return order
 
-    def _depth_first_search_upwards(j: int,
-				   order: list[int],
-				   visited: list[bool],
-				   dn_map: dict[int, list[int]],
-				   up_map: dict[int, list[int]]):
+    def _depth_first_search_upwards(self, j: int,
+				    order: list[int],
+				    visited: list[bool],
+				    dn_map: dict[int, list[int]],
+				    up_map: dict[int, list[int]]):
         """depth_first_search_upwards"""
         
         k = j
@@ -317,15 +327,15 @@ class ReadingOrderPredictor:
         inds = up_map.at(j)
         for ind in inds:
             if not visited[ind]:
-                return self.depth_first_search_upwards(ind, order, visited, dn_map, up_map)
+                return self._depth_first_search_upwards(ind, order, visited, dn_map, up_map)
     
         return k
   
-    def _depth_first_search_downwards(j: int,
-				     order: list[int],
-				     visited: list[bool],
-				     dn_map: dict[int, list[int]],
-				     up_map: dict[int, list[int]]):
+    def _depth_first_search_downwards(self, j: int,
+				      order: list[int],
+				      visited: list[bool],
+				      dn_map: dict[int, list[int]],
+				      up_map: dict[int, list[int]]):
         """depth_first_search_downwards"""
 
         inds: list[int] = dn_map[j]
