@@ -20,9 +20,7 @@ class LayoutPredictor:
     Document layout prediction using safe tensors
     """
 
-    def __init__(
-        self, artifact_path: str, num_threads: int = None
-    ):
+    def __init__(self, artifact_path: str, num_threads: int = None):
         """
         Provide the artifact path that contains the LayoutModel file
 
@@ -87,7 +85,9 @@ class LayoutPredictor:
         # Set number of threads for CPU
         if self.device.type == "cpu":
             if num_threads is None:
-                num_threads = int(os.environ.get("OMP_NUM_THREADS", DEFAULT_NUM_THREADS))
+                num_threads = int(
+                    os.environ.get("OMP_NUM_THREADS", DEFAULT_NUM_THREADS)
+                )
             self._num_threads = num_threads
             torch.set_num_threads(self._num_threads)
 
@@ -100,7 +100,9 @@ class LayoutPredictor:
         processor_config = os.path.join(artifact_path, "preprocessor_config.json")
         model_config = os.path.join(artifact_path, "config.json")
         self._image_processor = RTDetrImageProcessor.from_json_file(processor_config)
-        self._model = RTDetrForObjectDetection.from_pretrained(artifact_path, config=model_config)
+        self._model = RTDetrForObjectDetection.from_pretrained(
+            artifact_path, config=model_config
+        )
         self._model.eval()
 
     def info(self) -> dict:
@@ -143,15 +145,22 @@ class LayoutPredictor:
             raise TypeError("Not supported input image format")
 
         resize = {"height": self._image_size, "width": self._image_size}
-        inputs = self._image_processor(images=page_img, return_tensors="pt", size=resize)
+        inputs = self._image_processor(
+            images=page_img, return_tensors="pt", size=resize
+        )
         outputs = self._model(**inputs)
         results = self._image_processor.post_process_object_detection(
-            outputs, target_sizes=torch.tensor([page_img.size[::-1]]), threshold=self._threshold
+            outputs,
+            target_sizes=torch.tensor([page_img.size[::-1]]),
+            threshold=self._threshold,
         )
 
         w, h = page_img.size
+
         result = results[0]
-        for score, label_id, box in zip(result["scores"], result["labels"], result["boxes"]):
+        for score, label_id, box in zip(
+            result["scores"], result["labels"], result["boxes"]
+        ):
             score = float(score.item())
 
             label_id = int(label_id.item()) + 1  # Advance the label_id
