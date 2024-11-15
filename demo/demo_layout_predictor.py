@@ -14,8 +14,8 @@ from PIL import Image, ImageDraw, ImageFont
 from huggingface_hub import snapshot_download
 
 # TODO: Switch LayoutModel implementations
-# from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
-from docling_ibm_models.layoutmodel.layout_predictor_jit import LayoutPredictor
+from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
+# from docling_ibm_models.layoutmodel.layout_predictor_jit import LayoutPredictor
 
 
 def save_predictions(prefix: str, viz_dir: str, img_fn: str, img, predictions: dict):
@@ -109,10 +109,9 @@ def main(args):
     # download_path = snapshot_download(repo_id="ds4sd/docling-models")
     # artifact_path = os.path.join(download_path, "model_artifacts/layout/beehive_v0.0.5_pt")
 
-    os.environ["TORCH_DEVICE"] = "cpu"
-    artifact_path = "/Users/nli/data/models/layout_model/online_docling_models/v2.0.1"
-
-    # artifact_path = "/Users/nli/data/models/layout_model/safe_tensors"
+    # os.environ["TORCH_DEVICE"] = "cpu"
+    # artifact_path = "/Users/nli/data/models/layout_model/online_docling_models/v2.0.1"
+    artifact_path = "/Users/nli/data/models/layout_model/safe_tensors"
 
     # Test the LayoutPredictor
     demo(logger, artifact_path, num_threads, img_dir, viz_dir)
