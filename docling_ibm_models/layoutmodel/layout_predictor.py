@@ -6,11 +6,11 @@ import os
 from collections.abc import Iterable
 from typing import Union
 
-from transformers import RTDetrForObjectDetection, RTDetrImageProcessor
 import numpy as np
 import torch
 import torchvision.transforms as T
 from PIL import Image
+from transformers import RTDetrForObjectDetection, RTDetrImageProcessor
 
 DEFAULT_NUM_THREADS = 4
 
