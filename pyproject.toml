@@ -25,6 +25,7 @@ python = "^3.10"
 torch = "^2.2.2"
 torchvision = "^0"
 transformers = "^4.46.2"
+accelerate = "^1.1.1"
 numpy = [
     { version = "^2.1.0", markers = 'python_version >= "3.13"' },
     { version = "^1.24.4", markers = 'python_version < "3.13"' },
