@@ -74,16 +74,16 @@ class LayoutPredictor:
         # Set device based on env var or availability
         device_name = os.environ.get("TORCH_DEVICE", "").lower()
         if device_name in ["cuda", "mps", "cpu"]:
-            self.device = torch.device(device_name)
+            self._device = torch.device(device_name)
         elif torch.cuda.is_available():
-            self.device = torch.device("cuda")
+            self._device = torch.device("cuda")
         elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-            self.device = torch.device("mps")
+            self._device = torch.device("mps")
         else:
-            self.device = torch.device("cpu")
+            self._device = torch.device("cpu")
 
         # Set number of threads for CPU
-        if self.device.type == "cpu":
+        if self._device.type == "cpu":
             if num_threads is None:
                 num_threads = int(
                     os.environ.get("OMP_NUM_THREADS", DEFAULT_NUM_THREADS)
@@ -101,7 +101,7 @@ class LayoutPredictor:
         model_config = os.path.join(artifact_path, "config.json")
         self._image_processor = RTDetrImageProcessor.from_json_file(processor_config)
         self._model = RTDetrForObjectDetection.from_pretrained(
-            artifact_path, config=model_config
+            artifact_path, config=model_config, device_map=self._device
         )
         self._model.eval()
 
@@ -111,7 +111,7 @@ class LayoutPredictor:
         """
         info = {
             "safe_tensors_file": self._st_fn,
-            "device": str(self.device),
+            "device": str(self._device),
             "image_size": self._image_size,
             "threshold": self._threshold,
         }
@@ -146,8 +146,10 @@ class LayoutPredictor:
 
         resize = {"height": self._image_size, "width": self._image_size}
         inputs = self._image_processor(
-            images=page_img, return_tensors="pt", size=resize
-        )
+            images=page_img,
+            return_tensors="pt",
+            size=resize,
+        ).to(self._device)
         outputs = self._model(**inputs)
         results = self._image_processor.post_process_object_detection(
             outputs,
