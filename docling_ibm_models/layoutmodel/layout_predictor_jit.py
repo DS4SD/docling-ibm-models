@@ -20,9 +20,7 @@ class LayoutPredictor:
     Document layout prediction using torch
     """
 
-    def __init__(
-        self, artifact_path: str, num_threads: int = None
-    ):
+    def __init__(self, artifact_path: str, num_threads: int = None):
         """
         Provide the artifact path that contains the LayoutModel file
 
@@ -92,7 +90,9 @@ class LayoutPredictor:
         # Set number of threads for CPU
         if self.device.type == "cpu":
             if num_threads is None:
-                num_threads = int(os.environ.get("OMP_NUM_THREADS", DEFAULT_NUM_THREADS))
+                num_threads = int(
+                    os.environ.get("OMP_NUM_THREADS", DEFAULT_NUM_THREADS)
+                )
             self._num_threads = num_threads
             torch.set_num_threads(self._num_threads)
 
