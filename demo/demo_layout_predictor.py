@@ -10,10 +10,45 @@ import time
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from huggingface_hub import snapshot_download
 
-from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
+# TODO: Switch LayoutModel implementations
+# from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
+from docling_ibm_models.layoutmodel.layout_predictor_jit import LayoutPredictor
+
+
+def save_predictions(prefix: str, viz_dir: str, img_fn: str, img, predictions: dict):
+    img_path = Path(img_fn)
+
+    image = img.copy()
+    draw = ImageDraw.Draw(image)
+
+    predictions_filename = f"{prefix}_{img_path.stem}.txt"
+    predictions_fn = os.path.join(viz_dir, predictions_filename)
+    with open(predictions_fn, "w") as fd:
+        for pred in predictions:
+            bbox = [
+                round(pred["l"].item(), 2),
+                round(pred["t"].item(), 2),
+                round(pred["r"].item(), 2),
+                round(pred["b"].item(), 2),
+            ]
+            label = pred["label"]
+            confidence = round(pred["confidence"], 3)
+
+            # Save the predictions in txt file
+            pred_txt = f"{prefix} {img_fn}: {label} - {bbox} - {confidence}\n"
+            fd.write(pred_txt)
+
+            # Draw the bbox and label
+            draw.rectangle(bbox, outline="orange")
+            txt = f"{pred["label"]}: {round(pred["confidence"], 2)}"
+            draw.text((bbox[0], bbox[1]), text=txt, font=ImageFont.load_default(), fill="blue")
+
+    draw_filename = f"{prefix}_{img_path.name}"
+    draw_fn = os.path.join(viz_dir, draw_filename)
+    image.save(draw_fn)
 
 
 def demo(
@@ -44,35 +79,9 @@ def demo(
             dt_ms = 1000 * (time.time() - start_t)
             logger.debug("Time elapsed for prediction(ms): %s", dt_ms)
 
-            # Draw predictions
-            out_img = image.copy()
-            draw = ImageDraw.Draw(out_img)
-
-            for i, pred in enumerate(preds):
-                score = pred["confidence"]
-                label = pred["label"]
-                box = [
-                    round(pred["l"]),
-                    round(pred["t"]),
-                    round(pred["r"]),
-                    round(pred["b"]),
-                ]
-
-                # Draw bbox and label
-                draw.rectangle(
-                    box,
-                    outline="red",
-                )
-                draw.text(
-                    (box[0], box[1]),
-                    text=str(label),
-                    fill="blue",
-                )
-                logger.info("%s: [label|score|bbox] = ['%s' | %s | %s]", i, label, score, box)
-
-            save_fn = os.path.join(viz_dir, os.path.basename(img_fn))
-            out_img.save(save_fn)
-            logger.info("Saving prediction visualization in: '%s'", save_fn)
+            # Save predictions
+            logger.info("Saving prediction visualization in: '%s'", viz_dir)
+            save_predictions("ST", viz_dir, img_fn, image, preds)
 
 
 def main(args):
@@ -95,9 +104,15 @@ def main(args):
     # Ensure the viz dir
     Path(viz_dir).mkdir(parents=True, exist_ok=True)
 
+    # TODO: Switch LayoutModel implementations
     # Download models from HF
-    download_path = snapshot_download(repo_id="ds4sd/docling-models")
-    artifact_path = os.path.join(download_path, "model_artifacts/layout/beehive_v0.0.5_pt")
+    # download_path = snapshot_download(repo_id="ds4sd/docling-models")
+    # artifact_path = os.path.join(download_path, "model_artifacts/layout/beehive_v0.0.5_pt")
+
+    os.environ["TORCH_DEVICE"] = "cpu"
+    artifact_path = "/Users/nli/data/models/layout_model/online_docling_models/v2.0.1"
+
+    # artifact_path = "/Users/nli/data/models/layout_model/safe_tensors"
 
     # Test the LayoutPredictor
     demo(logger, artifact_path, num_threads, img_dir, viz_dir)
