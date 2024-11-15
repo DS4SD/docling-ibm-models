@@ -10,11 +10,12 @@ import time
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
 from huggingface_hub import snapshot_download
+from PIL import Image, ImageDraw, ImageFont
 
 # TODO: Switch LayoutModel implementations
 from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
+
 # from docling_ibm_models.layoutmodel.layout_predictor_jit import LayoutPredictor
 
 
@@ -44,7 +45,9 @@ def save_predictions(prefix: str, viz_dir: str, img_fn: str, img, predictions: d
             # Draw the bbox and label
             draw.rectangle(bbox, outline="orange")
             txt = f"{label}: {confidence}"
-            draw.text((bbox[0], bbox[1]), text=txt, font=ImageFont.load_default(), fill="blue")
+            draw.text(
+                (bbox[0], bbox[1]), text=txt, font=ImageFont.load_default(), fill="blue"
+            )
 
     draw_filename = f"{prefix}_{img_path.name}"
     draw_fn = os.path.join(viz_dir, draw_filename)
@@ -85,9 +88,13 @@ def demo(
             # Save predictions
             logger.info("Saving prediction visualization in: '%s'", viz_dir)
             save_predictions("ST", viz_dir, img_fn, image, preds)
-    total_ms =  1000 * (time.perf_counter() - t0)
+    total_ms = 1000 * (time.perf_counter() - t0)
     avg_ms = (total_ms / img_counter) if img_counter > 0 else 0
-    logger.info("For {} images(ms): [total|avg] = [{:.1f}|{:.1f}]".format(img_counter, total_ms, avg_ms))
+    logger.info(
+        "For {} images(ms): [total|avg] = [{:.1f}|{:.1f}]".format(
+            img_counter, total_ms, avg_ms
+        )
+    )
 
 
 def main(args):
