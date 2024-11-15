@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: MIT
 #
 import os
+from pathlib import Path
 
 import numpy as np
 import pytest
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 from huggingface_hub import snapshot_download
 
-import docling_ibm_models.layoutmodel.layout_predictor as lp
 from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
 
 
@@ -33,13 +33,17 @@ def init() -> dict:
         "pred_bboxes": 9,
     }
 
+    ###########################################################################################
+    # TODO: Switch LayoutModel implementations
     # Download models from HF
-    download_path = snapshot_download(repo_id="ds4sd/docling-models")
-    artifact_path = os.path.join(download_path, "model_artifacts/layout/beehive_v0.0.5_pt")
+    # download_path = snapshot_download(repo_id="ds4sd/docling-models")
+    # artifact_path = os.path.join(download_path, "model_artifacts/layout/beehive_v0.0.5_pt")
+    
+    artifact_path = "/Users/nli/data/models/layout_model/safe_tensors"
+    ###########################################################################################
 
     # Add the missing config keys
     init["artifact_path"] = artifact_path
-    init["info1"]["torch_file"] = os.path.join(artifact_path, lp.MODEL_CHECKPOINT_FN)
 
     return init
 
@@ -49,11 +53,9 @@ def test_layoutpredictor(init: dict):
     Unit test for the LayoutPredictor
     """
     # Initialize LayoutPredictor with envvars
-    #os.environ["TORCH_DEVICE"] = "cpu"
-    #os.environ["OMP_NUM_THREADS"] = "2"
+    # os.environ["TORCH_DEVICE"] = "cpu"
+    # os.environ["OMP_NUM_THREADS"] = "2"
     lpredictor = LayoutPredictor(init["artifact_path"])
-    #assert init["info1"] == lpredictor.info()
-
 
     # Unsupported input image
     is_exception = False
@@ -68,6 +70,7 @@ def test_layoutpredictor(init: dict):
     for img_fn in init["test_imgs"]:
         with Image.open(img_fn) as img:
             w, h = img.size
+
             # Load images as PIL objects
             for i, pred in enumerate(lpredictor.predict(img)):
                 print("PIL pred: {}".format(pred))
@@ -75,7 +78,6 @@ def test_layoutpredictor(init: dict):
                 assert pred["t"] >= 0 and pred["t"] <= h
                 assert pred["r"] >= 0 and pred["r"] <= w
                 assert pred["b"] >= 0 and pred["b"] <= h
-
             assert i + 1 == init["pred_bboxes"]
 
             # Load images as numpy arrays
