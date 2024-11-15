@@ -29,10 +29,10 @@ def save_predictions(prefix: str, viz_dir: str, img_fn: str, img, predictions: d
     with open(predictions_fn, "w") as fd:
         for pred in predictions:
             bbox = [
-                round(pred["l"].item(), 2),
-                round(pred["t"].item(), 2),
-                round(pred["r"].item(), 2),
-                round(pred["b"].item(), 2),
+                round(pred["l"], 2),
+                round(pred["t"], 2),
+                round(pred["r"], 2),
+                round(pred["b"], 2),
             ]
             label = pred["label"]
             confidence = round(pred["confidence"], 3)
@@ -69,19 +69,25 @@ def demo(
     logger.info("LayoutPredictor settings: {}".format(lpredictor.info()))
 
     # Predict all test png images
+    t0 = time.perf_counter()
+    img_counter = 0
     for img_fn in Path(img_dir).rglob("*.png"):
+        img_counter += 1
         logger.info("Predicting '%s'...", img_fn)
-        start_t = time.time()
 
         with Image.open(img_fn) as image:
             # Predict layout
+            img_t0 = time.perf_counter()
             preds = list(lpredictor.predict(image))
-            dt_ms = 1000 * (time.time() - start_t)
-            logger.debug("Time elapsed for prediction(ms): %s", dt_ms)
+            img_ms = 1000 * (time.perf_counter() - img_t0)
+            logger.debug("Prediction(ms): {:.2f}".format(img_ms))
 
             # Save predictions
             logger.info("Saving prediction visualization in: '%s'", viz_dir)
             save_predictions("ST", viz_dir, img_fn, image, preds)
+    total_ms =  1000 * (time.perf_counter() - t0)
+    avg_ms = (total_ms / img_counter) if img_counter > 0 else 0
+    logger.info("For {} images(ms): [total|avg] = [{:.1f}|{:.1f}]".format(img_counter, total_ms, avg_ms))
 
 
 def main(args):
