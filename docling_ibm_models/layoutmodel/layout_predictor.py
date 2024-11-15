@@ -172,10 +172,11 @@ class LayoutPredictor:
             if label_str in self._black_classes:
                 continue
 
-            l = min(w, max(0, box[0]))
-            t = min(h, max(0, box[1]))
-            r = min(w, max(0, box[2]))
-            b = min(h, max(0, box[3]))
+            bbox_float = [float(b.item()) for b in box]
+            l = min(w, max(0, bbox_float[0]))
+            t = min(h, max(0, bbox_float[1]))
+            r = min(w, max(0, bbox_float[2]))
+            b = min(h, max(0, bbox_float[3]))
             yield {
                 "l": l,
                 "t": t,
