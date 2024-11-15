@@ -43,7 +43,7 @@ def save_predictions(prefix: str, viz_dir: str, img_fn: str, img, predictions: d
 
             # Draw the bbox and label
             draw.rectangle(bbox, outline="orange")
-            txt = f"{pred["label"]}: {round(pred["confidence"], 2)}"
+            txt = f"{label}: {confidence}"
             draw.text((bbox[0], bbox[1]), text=txt, font=ImageFont.load_default(), fill="blue")
 
     draw_filename = f"{prefix}_{img_path.name}"
