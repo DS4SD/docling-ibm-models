@@ -6,23 +6,21 @@ import os
 from collections.abc import Iterable
 from typing import Union
 
+from transformers import RTDetrForObjectDetection, RTDetrImageProcessor
 import numpy as np
 import torch
 import torchvision.transforms as T
 from PIL import Image
 
-MODEL_CHECKPOINT_FN = "model.pt"
 DEFAULT_NUM_THREADS = 4
 
 
 class LayoutPredictor:
     """
-    Document layout prediction using torch
+    Document layout prediction using safe tensors
     """
 
-    def __init__(
-        self, artifact_path: str, num_threads: int = None
-    ):
+    def __init__(self, artifact_path: str, num_threads: int = None):
         """
         Provide the artifact path that contains the LayoutModel file
 
@@ -84,21 +82,28 @@ class LayoutPredictor:
         else:
             self.device = torch.device("cpu")
 
-        # Model file
-        self._torch_fn = os.path.join(artifact_path, MODEL_CHECKPOINT_FN)
-        if not os.path.isfile(self._torch_fn):
-            raise FileNotFoundError("Missing torch file: {}".format(self._torch_fn))
-
         # Set number of threads for CPU
         if self.device.type == "cpu":
             if num_threads is None:
-                num_threads = int(os.environ.get("OMP_NUM_THREADS", DEFAULT_NUM_THREADS))
+                num_threads = int(
+                    os.environ.get("OMP_NUM_THREADS", DEFAULT_NUM_THREADS)
+                )
             self._num_threads = num_threads
             torch.set_num_threads(self._num_threads)
 
+        # Model file and configurations
+        self._st_fn = os.path.join(artifact_path, "model.safetensors")
+        if not os.path.isfile(self._st_fn):
+            raise FileNotFoundError("Missing safe tensors file: {}".format(self._st_fn))
+
         # Load model and move to device
-        self.model = torch.jit.load(self._torch_fn, map_location=self.device)
-        self.model.eval()
+        processor_config = os.path.join(artifact_path, "preprocessor_config.json")
+        model_config = os.path.join(artifact_path, "config.json")
+        self._image_processor = RTDetrImageProcessor.from_json_file(processor_config)
+        self._model = RTDetrForObjectDetection.from_pretrained(
+            artifact_path, config=model_config
+        )
+        self._model.eval()
 
     def info(self) -> dict:
         """
@@ -139,40 +144,41 @@ class LayoutPredictor:
         else:
             raise TypeError("Not supported input image format")
 
-        w, h = page_img.size
-        orig_size = torch.tensor([w, h], device=self.device)[None]
-
-        transforms = T.Compose(
-            [
-                T.Resize((640, 640)),
-                T.ToTensor(),
-            ]
+        resize = {"height": self._image_size, "width": self._image_size}
+        inputs = self._image_processor(
+            images=page_img, return_tensors="pt", size=resize
         )
-        img = transforms(page_img)[None].to(self.device)
+        outputs = self._model(**inputs)
+        results = self._image_processor.post_process_object_detection(
+            outputs,
+            target_sizes=torch.tensor([page_img.size[::-1]]),
+            threshold=self._threshold,
+        )
 
-        # Predict
-        labels, boxes, scores = self.model(img, orig_size)
+        w, h = page_img.size
 
-        # Yield output
-        for label_idx, box, score in zip(labels[0], boxes[0], scores[0]):
-            # Filter out blacklisted classes
-            label_idx = int(label_idx.item())
+        result = results[0]
+        for score, label_id, box in zip(
+            result["scores"], result["labels"], result["boxes"]
+        ):
             score = float(score.item())
-            label = self._classes_map[label_idx + 1]
-            if label in self._black_classes:
+
+            label_id = int(label_id.item()) + 1  # Advance the label_id
+            label_str = self._classes_map[label_id]
+
+            # Filter out blacklisted classes
+            if label_str in self._black_classes:
                 continue
 
-            # Check against threshold
-            if score > self._threshold:
-                l = min(w, max(0, box[0]))
-                t = min(h, max(0, box[1]))
-                r = min(w, max(0, box[2]))
-                b = min(h, max(0, box[3]))
-                yield {
-                    "l": l,
-                    "t": t,
-                    "r": r,
-                    "b": b,
-                    "label": label,
-                    "confidence": score,
-                }
+            l = min(w, max(0, box[0]))
+            t = min(h, max(0, box[1]))
+            r = min(w, max(0, box[2]))
+            b = min(h, max(0, box[3]))
+            yield {
+                "l": l,
+                "t": t,
+                "r": r,
+                "b": b,
+                "label": label_str,
+                "confidence": score,
+            }
