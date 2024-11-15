@@ -110,7 +110,7 @@ class LayoutPredictor:
         Get information about the configuration of LayoutPredictor
         """
         info = {
-            "torch_file": self._torch_fn,
+            "safe_tensors_file": self._st_fn,
             "device": str(self.device),
             "image_size": self._image_size,
             "threshold": self._threshold,
