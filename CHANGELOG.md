@@ -1,3 +1,9 @@
+## [v2.0.4](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.4) - 2024-11-18
+
+### Fix
+
+* Remove lxml deps ([#51](https://github.com/DS4SD/docling-ibm-models/issues/51)) ([`7a0cbde`](https://github.com/DS4SD/docling-ibm-models/commit/7a0cbde7e0638bbd91d5905ae457fdcb299ee87f))
+
 ## [v2.0.3](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.3) - 2024-10-30
 
 ### Fix
