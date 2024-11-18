@@ -7,9 +7,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from PIL import Image, ImageDraw, ImageFont
-
 from huggingface_hub import snapshot_download
+from PIL import Image, ImageDraw, ImageFont
 
 from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
 
@@ -34,12 +33,11 @@ def init() -> dict:
     }
 
     ###########################################################################################
-    # TODO: Switch LayoutModel implementations
     # Download models from HF
     # download_path = snapshot_download(repo_id="ds4sd/docling-models")
     # artifact_path = os.path.join(download_path, "model_artifacts/layout/beehive_v0.0.5_pt")
-    
-    artifact_path = "/Users/nli/data/models/layout_model/safe_tensors"
+
+    artifact_path = "/Users/nli/model_weights/docling/layout_model/safe_tensors"
     ###########################################################################################
 
     # Add the missing config keys
@@ -52,10 +50,18 @@ def test_layoutpredictor(init: dict):
     r"""
     Unit test for the LayoutPredictor
     """
-    # Initialize LayoutPredictor with envvars
-    # os.environ["TORCH_DEVICE"] = "cpu"
-    # os.environ["OMP_NUM_THREADS"] = "2"
-    lpredictor = LayoutPredictor(init["artifact_path"])
+    device = "cpu"
+    num_threads = 2
+
+    # Initialize LayoutPredictor
+    lpredictor = LayoutPredictor(
+        init["artifact_path"], device=device, num_threads=num_threads
+    )
+
+    # Check info
+    info = lpredictor.info()
+    assert info["device"] == device, "Wronly set device"
+    assert info["num_threads"] == num_threads, "Wronly set number of threads"
 
     # Unsupported input image
     is_exception = False

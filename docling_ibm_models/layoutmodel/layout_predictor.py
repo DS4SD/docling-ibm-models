@@ -12,30 +12,23 @@ import torchvision.transforms as T
 from PIL import Image
 from transformers import RTDetrForObjectDetection, RTDetrImageProcessor
 
-DEFAULT_NUM_THREADS = 4
-
 
 class LayoutPredictor:
     """
     Document layout prediction using safe tensors
     """
 
-    def __init__(self, artifact_path: str, num_threads: int = None):
+    def __init__(self, artifact_path: str, device: str = "cpu", num_threads: int = 4):
         """
         Provide the artifact path that contains the LayoutModel file
-
-        The number of threads is decided, in the following order, by:
-        1. The init method parameter `num_threads`, if it is set.
-        2. The envvar "OMP_NUM_THREADS", if it is set.
-        3. The default value DEFAULT_NUM_THREADS.
-
-        The execution device is decided by the env var "TORCH_DEVICE" with values:
-        'cpu', 'cuda', or 'mps'. If not set, automatically selects the best available device.
 
         Parameters
         ----------
         artifact_path: Path for the model torch file.
-        num_threads: (Optional) Number of threads to run the inference.
+        device: (Optional) Device to run the inference.
+                           It should be one of: ["cpu", "cuda", "mps"].
+                           Otherwise the best available device is selected
+        num_threads: (Optional) Number of threads to run the inference when the device is "cpu".
 
         Raises
         ------
@@ -72,7 +65,7 @@ class LayoutPredictor:
         self._size = np.asarray([[self._image_size, self._image_size]], dtype=np.int64)
 
         # Set device based on env var or availability
-        device_name = os.environ.get("TORCH_DEVICE", "").lower()
+        device_name = device.lower()
         if device_name in ["cuda", "mps", "cpu"]:
             self._device = torch.device(device_name)
         elif torch.cuda.is_available():
@@ -84,10 +77,6 @@ class LayoutPredictor:
 
         # Set number of threads for CPU
         if self._device.type == "cpu":
-            if num_threads is None:
-                num_threads = int(
-                    os.environ.get("OMP_NUM_THREADS", DEFAULT_NUM_THREADS)
-                )
             self._num_threads = num_threads
             torch.set_num_threads(self._num_threads)
 
@@ -112,6 +101,7 @@ class LayoutPredictor:
         info = {
             "safe_tensors_file": self._st_fn,
             "device": str(self._device),
+            "num_threads": self._num_threads,
             "image_size": self._image_size,
             "threshold": self._threshold,
         }

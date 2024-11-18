@@ -124,7 +124,7 @@ def main(args):
 
     # os.environ["TORCH_DEVICE"] = "cpu"
     # artifact_path = "/Users/nli/data/models/layout_model/online_docling_models/v2.0.1"
-    artifact_path = "/Users/nli/data/models/layout_model/safe_tensors"
+    artifact_path = "/Users/nli/model_weights/docling/layout_model/safe_tensors"
 
     # Test the LayoutPredictor
     demo(logger, artifact_path, num_threads, img_dir, viz_dir)
