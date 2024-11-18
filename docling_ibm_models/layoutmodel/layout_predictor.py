@@ -2,6 +2,7 @@
 # Copyright IBM Corp. 2024 - 2024
 # SPDX-License-Identifier: MIT
 #
+import logging
 import os
 from collections.abc import Iterable
 from typing import Union
@@ -12,22 +13,24 @@ import torchvision.transforms as T
 from PIL import Image
 from transformers import RTDetrForObjectDetection, RTDetrImageProcessor
 
+_log = logging.getLogger(__name__)
+
 
 class LayoutPredictor:
     """
     Document layout prediction using safe tensors
     """
 
-    def __init__(self, artifact_path: str, device: str = "cpu", num_threads: int = 4):
+    def __init__(self, artifact_path: str, device: str = "auto", num_threads: int = 4):
         """
         Provide the artifact path that contains the LayoutModel file
 
         Parameters
         ----------
         artifact_path: Path for the model torch file.
-        device: (Optional) Device to run the inference.
-                           It should be one of: ["cpu", "cuda", "mps"].
-                           Otherwise the best available device is selected
+        device: (Optional) Device to run the inference. One of: ["cpu", "cuda", "mps", "auto"].
+                           When it is "auto", the best available device is selected.
+                           Default value is "auto"
         num_threads: (Optional) Number of threads to run the inference when the device is "cpu".
 
         Raises
@@ -64,7 +67,7 @@ class LayoutPredictor:
         self._image_size = 640
         self._size = np.asarray([[self._image_size, self._image_size]], dtype=np.int64)
 
-        # Set device based on env var or availability
+        # Set device based on init parameter or availability
         device_name = device.lower()
         if device_name in ["cuda", "mps", "cpu"]:
             self._device = torch.device(device_name)
@@ -93,6 +96,8 @@ class LayoutPredictor:
             artifact_path, config=model_config, device_map=self._device
         )
         self._model.eval()
+
+        _log.debug("LayoutPredictor settings: {}".format(self.info()))
 
     def info(self) -> dict:
         """

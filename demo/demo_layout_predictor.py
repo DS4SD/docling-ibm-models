@@ -57,6 +57,7 @@ def save_predictions(prefix: str, viz_dir: str, img_fn: str, img, predictions: d
 def demo(
     logger: logging.Logger,
     artifact_path: str,
+    device: str,
     num_threads: int,
     img_dir: str,
     viz_dir: str,
@@ -68,8 +69,7 @@ def demo(
     pdf_image = pyvips.Image.new_from_file("test_data/ADS.2007.page_123.pdf", page=0)
     """
     # Create the layout predictor
-    lpredictor = LayoutPredictor(artifact_path, num_threads=num_threads)
-    logger.info("LayoutPredictor settings: {}".format(lpredictor.info()))
+    lpredictor = LayoutPredictor(artifact_path, device=device, num_threads=num_threads)
 
     # Predict all test png images
     t0 = time.perf_counter()
@@ -87,6 +87,9 @@ def demo(
 
             # Save predictions
             logger.info("Saving prediction visualization in: '%s'", viz_dir)
+
+            # TODO: Switch LayoutModel implementations
+            # save_predictions("JIT", viz_dir, img_fn, image, preds)
             save_predictions("ST", viz_dir, img_fn, image, preds)
     total_ms = 1000 * (time.perf_counter() - t0)
     avg_ms = (total_ms / img_counter) if img_counter > 0 else 0
@@ -100,10 +103,12 @@ def demo(
 def main(args):
     r""" """
     num_threads = int(args.num_threads) if args.num_threads is not None else None
+    device = args.device.lower()
     img_dir = args.img_dir
     viz_dir = args.viz_dir
 
     # Initialize logger
+    logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger("LayoutPredictor")
     logger.setLevel(logging.DEBUG)
     if not logger.hasHandlers():
@@ -122,12 +127,11 @@ def main(args):
     # download_path = snapshot_download(repo_id="ds4sd/docling-models")
     # artifact_path = os.path.join(download_path, "model_artifacts/layout/beehive_v0.0.5_pt")
 
-    # os.environ["TORCH_DEVICE"] = "cpu"
-    # artifact_path = "/Users/nli/data/models/layout_model/online_docling_models/v2.0.1"
+    # artifact_path = "/Users/nli/model_weights/docling/layout_model/online_docling_models/v2.0.1"
     artifact_path = "/Users/nli/model_weights/docling/layout_model/safe_tensors"
 
     # Test the LayoutPredictor
-    demo(logger, artifact_path, num_threads, img_dir, viz_dir)
+    demo(logger, artifact_path, device, num_threads, img_dir, viz_dir)
 
 
 if __name__ == "__main__":
@@ -135,6 +139,9 @@ if __name__ == "__main__":
     python -m demo.demo_layout_predictor -i <images_dir>
     """
     parser = argparse.ArgumentParser(description="Test the LayoutPredictor")
+    parser.add_argument(
+        "-d", "--device", required=False, default="cpu", help="One of [cpu, cuda, mps]"
+    )
     parser.add_argument(
         "-n", "--num_threads", required=False, default=None, help="Number of threads"
     )

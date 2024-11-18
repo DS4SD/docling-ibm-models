@@ -2,6 +2,7 @@
 # Copyright IBM Corp. 2024 - 2024
 # SPDX-License-Identifier: MIT
 #
+import logging
 import os
 from collections.abc import Iterable
 from typing import Union
@@ -10,6 +11,9 @@ import numpy as np
 import torch
 import torchvision.transforms as T
 from PIL import Image
+
+_log = logging.getLogger(__name__)
+
 
 MODEL_CHECKPOINT_FN = "model.pt"
 DEFAULT_NUM_THREADS = 4
@@ -20,22 +24,20 @@ class LayoutPredictor:
     Document layout prediction using torch
     """
 
-    def __init__(self, artifact_path: str, num_threads: int = None):
+    def __init__(
+        self, artifact_path: str, device: str = "auto", num_threads: int = None
+    ):
         """
         Provide the artifact path that contains the LayoutModel file
-
-        The number of threads is decided, in the following order, by:
-        1. The init method parameter `num_threads`, if it is set.
-        2. The envvar "OMP_NUM_THREADS", if it is set.
-        3. The default value DEFAULT_NUM_THREADS.
-
-        The execution device is decided by the env var "TORCH_DEVICE" with values:
-        'cpu', 'cuda', or 'mps'. If not set, automatically selects the best available device.
 
         Parameters
         ----------
         artifact_path: Path for the model torch file.
-        num_threads: (Optional) Number of threads to run the inference.
+        device: (Optional) Device to run the inference. One of: ["cpu", "cuda", "mps", "auto"].
+                           When it is "auto", the best available device is selected.
+                           Default value is "auto"
+        num_threads: (Optional) Number of threads to run the inference when the device is "cpu".
+
 
         Raises
         ------
@@ -71,16 +73,16 @@ class LayoutPredictor:
         self._image_size = 640
         self._size = np.asarray([[self._image_size, self._image_size]], dtype=np.int64)
 
-        # Set device based on env var or availability
-        device_name = os.environ.get("TORCH_DEVICE", "").lower()
+        # Set device based on init parameter or availability
+        device_name = device.lower()
         if device_name in ["cuda", "mps", "cpu"]:
-            self.device = torch.device(device_name)
+            self._device = torch.device(device_name)
         elif torch.cuda.is_available():
-            self.device = torch.device("cuda")
+            self._device = torch.device("cuda")
         elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-            self.device = torch.device("mps")
+            self._device = torch.device("mps")
         else:
-            self.device = torch.device("cpu")
+            self._device = torch.device("cpu")
 
         # Model file
         self._torch_fn = os.path.join(artifact_path, MODEL_CHECKPOINT_FN)
@@ -88,17 +90,15 @@ class LayoutPredictor:
             raise FileNotFoundError("Missing torch file: {}".format(self._torch_fn))
 
         # Set number of threads for CPU
-        if self.device.type == "cpu":
-            if num_threads is None:
-                num_threads = int(
-                    os.environ.get("OMP_NUM_THREADS", DEFAULT_NUM_THREADS)
-                )
+        if self._device.type == "cpu":
             self._num_threads = num_threads
             torch.set_num_threads(self._num_threads)
 
         # Load model and move to device
-        self.model = torch.jit.load(self._torch_fn, map_location=self.device)
-        self.model.eval()
+        self._model = torch.jit.load(self._torch_fn, map_location=self._device)
+        self._model.eval()
+
+        _log.debug("LayoutPredictor settings: {}".format(self.info()))
 
     def info(self) -> dict:
         """
@@ -106,7 +106,7 @@ class LayoutPredictor:
         """
         info = {
             "torch_file": self._torch_fn,
-            "device": str(self.device),
+            "device": str(self._device),
             "image_size": self._image_size,
             "threshold": self._threshold,
         }
@@ -140,7 +140,7 @@ class LayoutPredictor:
             raise TypeError("Not supported input image format")
 
         w, h = page_img.size
-        orig_size = torch.tensor([w, h], device=self.device)[None]
+        orig_size = torch.tensor([w, h], device=self._device)[None]
 
         transforms = T.Compose(
             [
@@ -148,10 +148,10 @@ class LayoutPredictor:
                 T.ToTensor(),
             ]
         )
-        img = transforms(page_img)[None].to(self.device)
+        img = transforms(page_img)[None].to(self._device)
 
         # Predict
-        labels, boxes, scores = self.model(img, orig_size)
+        labels, boxes, scores = self._model(img, orig_size)
 
         # Yield output
         for label_idx, box, score in zip(labels[0], boxes[0], scores[0]):
