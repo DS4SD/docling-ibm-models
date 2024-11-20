@@ -1,3 +1,9 @@
+## [v2.0.6](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.6) - 2024-11-20
+
+### Fix
+
+* Python3.9 support ([#54](https://github.com/DS4SD/docling-ibm-models/issues/54)) ([`e2b19d9`](https://github.com/DS4SD/docling-ibm-models/commit/e2b19d930279c150557af33f2b08d7abb1f47428))
+
 ## [v2.0.5](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.5) - 2024-11-20
 
 ### Fix
