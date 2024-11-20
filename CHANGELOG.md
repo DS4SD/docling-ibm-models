@@ -1,3 +1,9 @@
+## [v2.0.5](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.5) - 2024-11-20
+
+### Fix
+
+* Removing dependency from mean_average_precision package (not in use) ([#53](https://github.com/DS4SD/docling-ibm-models/issues/53)) ([`65affef`](https://github.com/DS4SD/docling-ibm-models/commit/65affef1f3ff209a8cdae4201aaaad8872d1069b))
+
 ## [v2.0.4](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.4) - 2024-11-18
 
 ### Fix
