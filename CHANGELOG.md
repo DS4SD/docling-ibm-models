@@ -1,3 +1,21 @@
+## [v2.0.6](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.6) - 2024-11-20
+
+### Fix
+
+* Python3.9 support ([#54](https://github.com/DS4SD/docling-ibm-models/issues/54)) ([`e2b19d9`](https://github.com/DS4SD/docling-ibm-models/commit/e2b19d930279c150557af33f2b08d7abb1f47428))
+
+## [v2.0.5](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.5) - 2024-11-20
+
+### Fix
+
+* Removing dependency from mean_average_precision package (not in use) ([#53](https://github.com/DS4SD/docling-ibm-models/issues/53)) ([`65affef`](https://github.com/DS4SD/docling-ibm-models/commit/65affef1f3ff209a8cdae4201aaaad8872d1069b))
+
+## [v2.0.4](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.4) - 2024-11-18
+
+### Fix
+
+* Remove lxml deps ([#51](https://github.com/DS4SD/docling-ibm-models/issues/51)) ([`7a0cbde`](https://github.com/DS4SD/docling-ibm-models/commit/7a0cbde7e0638bbd91d5905ae457fdcb299ee87f))
+
 ## [v2.0.3](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.3) - 2024-10-30
 
 ### Fix

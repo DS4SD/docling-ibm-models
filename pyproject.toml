@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "docling-ibm-models"
-version = "2.0.3"  # DO NOT EDIT, updated automatically
+version = "2.0.6"  # DO NOT EDIT, updated automatically
 description = "This package contains the AI models used by the Docling PDF conversion package"
 authors = ["Nikos Livathinos <nli@zurich.ibm.com>", "Maxim Lysak <mly@zurich.ibm.com>", "Ahmed Nassar <ahn@zurich.ibm.com>", "Christoph Auer <cau@zurich.ibm.com>", "Michele Dolfi <dol@zurich.ibm.com>", "Peter Staar <taa@zurich.ibm.com>"]
 license = "MIT"
@@ -21,7 +21,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.9"
 torch = "^2.2.2"
 torchvision = "^0"
 transformers = "^4.46.2"
@@ -30,11 +30,9 @@ numpy = [
     { version = "^2.1.0", markers = 'python_version >= "3.13"' },
     { version = "^1.24.4", markers = 'python_version < "3.13"' },
 ]
-lxml = "^4.9.1"
 jsonlines = "^3.1.0"
 Pillow = "^10.0.0"
 tqdm = "^4.64.0"
-mean_average_precision = "^2021.4.26.0"
 opencv-python-headless = "^4.6.0.66"
 huggingface_hub = ">=0.23,<1"
 
@@ -74,13 +72,13 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 88
-target-version = ["py310"]
+target-version = ["py39"]
 include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
 line_length = 88
-py_version=310
+py_version=39
 
 [tool.semantic_release]
 # for default values check:
