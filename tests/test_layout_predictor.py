@@ -5,6 +5,7 @@
 import os
 from pathlib import Path
 
+import torch
 import numpy as np
 import pytest
 from huggingface_hub import snapshot_download
@@ -32,13 +33,9 @@ def init() -> dict:
         "pred_bboxes": 9,
     }
 
-    ###########################################################################################
     # Download models from HF
-    # download_path = snapshot_download(repo_id="ds4sd/docling-models")
-    # artifact_path = os.path.join(download_path, "model_artifacts/layout/beehive_v0.0.5_pt")
-
-    artifact_path = "/Users/nli/model_weights/docling/layout_model/safe_tensors"
-    ###########################################################################################
+    download_path = snapshot_download(repo_id="ds4sd/docling-models", revision="refs/pr/2")
+    artifact_path = os.path.join(download_path, "model_artifacts/layout")
 
     # Add the missing config keys
     init["artifact_path"] = artifact_path
@@ -50,7 +47,7 @@ def test_layoutpredictor(init: dict):
     r"""
     Unit test for the LayoutPredictor
     """
-    device = "cpu"
+    device = torch.device("cpu")
     num_threads = 2
 
     # Initialize LayoutPredictor
@@ -60,7 +57,7 @@ def test_layoutpredictor(init: dict):
 
     # Check info
     info = lpredictor.info()
-    assert info["device"] == device, "Wronly set device"
+    assert info["device"] == device.type, "Wronly set device"
     assert info["num_threads"] == num_threads, "Wronly set number of threads"
 
     # Unsupported input image

@@ -80,40 +80,40 @@ def otsl_sqr_chk(rs_list, logdebug):
     return isSquare
 
 
-def decide_device(config: dict) -> str:
-    """
-    Decide the inference device based on the "predict.device_mode" parameter
-    """
-    device_mode = config["predict"].get("device_mode", "cpu")
+# def decide_device(config: dict) -> str:
+#     """
+#     Decide the inference device based on the "predict.device_mode" parameter
+#     """
+#     device_mode = config["predict"].get("device_mode", "cpu")
 
-    # Check CUDA availability
-    has_cuda = torch.cuda.device_count() > 0
+#     # Check CUDA availability
+#     has_cuda = torch.cuda.device_count() > 0
 
-    # Check MPS availability
-    has_mps = (torch.backends.mps.is_built() and
-               torch.backends.mps.is_available())
+#     # Check MPS availability
+#     has_mps = (torch.backends.mps.is_built() and
+#                torch.backends.mps.is_available())
 
-    if device_mode == "auto":
-        if has_cuda:
-            device = "cuda:0"
-        elif has_mps:
-            device = "mps"
-        else:
-            device = "cpu"
-    elif device_mode in ["gpu", "cuda"]:
-        if has_cuda:
-            device = "cuda:0"
-        else:
-            raise RuntimeError("CUDA device requested but not available")
-    elif device_mode == "mps":
-        if has_mps:
-            device = "mps"
-        else:
-            raise RuntimeError("MPS device requested but not available")
-    else:
-        device = "cpu"
+#     if device_mode == "auto":
+#         if has_cuda:
+#             device = "cuda:0"
+#         elif has_mps:
+#             device = "mps"
+#         else:
+#             device = "cpu"
+#     elif device_mode in ["gpu", "cuda"]:
+#         if has_cuda:
+#             device = "cuda:0"
+#         else:
+#             raise RuntimeError("CUDA device requested but not available")
+#     elif device_mode == "mps":
+#         if has_mps:
+#             device = "mps"
+#         else:
+#             raise RuntimeError("MPS device requested but not available")
+#     else:
+#         device = "cpu"
 
-    return device
+#     return device
 
 
 class TFPredictor:
@@ -121,23 +121,24 @@ class TFPredictor:
     Table predictions for the in-memory Docling API
     """
 
-    def __init__(self, config, num_threads: int = None):
+    def __init__(
+            self,
+            config,
+            device: torch.device = torch.device("cpu"),
+            num_threads: int = 4):
         r"""
-        The number of threads is decided, in the following order, by:
-        1. The init method parameter `num_threads`, if it is set.
-        2. The envvar "OMP_NUM_THREADS", if it is set.
-        3. The default value 4.
-
         Parameters
         ----------
-        config : dict
-            Parameters configuration
+        config : dict Parameters configuration
+        device: (Optional) torch device to run the inference. 
+        num_threads: (Optional) Number of threads to run the inference if device = 'cpu'
+        
         Raises
         ------
         ValueError
         When the model cannot be found
         """
-        self._device = decide_device(config)
+        self._device = device
         self._log().info("Running on device: {}".format(self._device))
 
         self._config = config
@@ -151,11 +152,10 @@ class TFPredictor:
 
         self._init_word_map()
 
-        # Set the number of torch threads
-        if num_threads is None:
-            num_threads = int(os.environ.get("OMP_NUM_THREADS", 4))
-        self._num_threads = num_threads
-        torch.set_num_threads(num_threads)
+        # Set the number of threads
+        if self._device.type == "cpu":
+            self._num_threads = num_threads
+            torch.set_num_threads(self._num_threads)
 
         # Load the model
         self._model = self._load_model()

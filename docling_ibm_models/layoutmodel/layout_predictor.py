@@ -21,17 +21,18 @@ class LayoutPredictor:
     Document layout prediction using safe tensors
     """
 
-    def __init__(self, artifact_path: str, device: str = "auto", num_threads: int = 4):
+    def __init__(self,
+                 artifact_path: str,
+                 device: torch.device = torch.device("cpu"),
+                 num_threads: int = 4):
         """
         Provide the artifact path that contains the LayoutModel file
 
         Parameters
         ----------
         artifact_path: Path for the model torch file.
-        device: (Optional) Device to run the inference. One of: ["cpu", "cuda", "mps", "auto"].
-                           When it is "auto", the best available device is selected.
-                           Default value is "auto"
-        num_threads: (Optional) Number of threads to run the inference when the device is "cpu".
+        device: (Optional) torch device to run the inference. 
+        num_threads: (Optional) Number of threads to run the inference if device = 'cpu'
 
         Raises
         ------
@@ -67,20 +68,10 @@ class LayoutPredictor:
         self._image_size = 640
         self._size = np.asarray([[self._image_size, self._image_size]], dtype=np.int64)
 
-        # Set device based on init parameter or availability
-        device_name = device.lower()
-        if device_name in ["cuda", "mps", "cpu"]:
-            self._device = torch.device(device_name)
-        elif torch.cuda.is_available():
-            self._device = torch.device("cuda")
-        elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-            self._device = torch.device("mps")
-        else:
-            self._device = torch.device("cpu")
-
         # Set number of threads for CPU
+        self._device = device
+        self._num_threads = num_threads
         if self._device.type == "cpu":
-            self._num_threads = num_threads
             torch.set_num_threads(self._num_threads)
 
         # Model file and configurations
@@ -105,7 +96,7 @@ class LayoutPredictor:
         """
         info = {
             "safe_tensors_file": self._st_fn,
-            "device": str(self._device),
+            "device": self._device.type,
             "num_threads": self._num_threads,
             "image_size": self._image_size,
             "threshold": self._threshold,

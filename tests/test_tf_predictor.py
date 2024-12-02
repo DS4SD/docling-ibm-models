@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 
+import torch
 import pytest
 import cv2
 from PIL import Image, ImageDraw
@@ -103,8 +104,7 @@ test_config = {
         "padding": False,
         "padding_size": 50,
         "disable_post_process": False,
-        "profiling": True,
-        "device_mode": "auto",
+        "profiling": True
     },
     "dataset_wordmap": {
         "word_map_tag": {
@@ -468,7 +468,7 @@ def init() -> list[dict]:
     Initialize the testing environment
     """
     # Download models from HF
-    download_path = snapshot_download(repo_id="ds4sd/docling-models")
+    download_path = snapshot_download(repo_id="ds4sd/docling-models", revision="refs/pr/2")
     save_dir = os.path.join(download_path, "model_artifacts/tableformer")
 
     # Add the missing config keys
@@ -481,6 +481,8 @@ def test_tf_predictor(init):
     Test the TFPredictor
     """
     viz = True
+    device = torch.device("cpu")
+    num_threads = 2
 
     # Load the docling_api_data
     iocr_pages = []
@@ -506,7 +508,7 @@ def test_tf_predictor(init):
         ), "Model checkpoint is missing"
 
         # Loop over the iocr_pages
-        predictor = TFPredictor(test_config)
+        predictor = TFPredictor(test_config, device=device, num_threads=num_threads)
         for iocr_page in iocr_pages:
             # Prepare "Predict" parameters
             # iw = iocr_page["width"]
@@ -628,35 +630,3 @@ def test_tf_predictor(init):
     print(json.dumps(profiling_data, indent=2, sort_keys=True))
 
     # assert False
-
-
-@pytest.mark.skip
-def test_device_mode():
-    r"""
-    Test the "predict.device_mode" parameter
-    """
-    mini_configs = [
-        {"predict": {}},
-        {"predict": {"device_mode": "cpu"}},
-        {"predict": {"device_mode": "cuda"}},
-        {"predict": {"device_mode": "gpu"}},
-        {"predict": {"device_mode": "mps"}},
-        {"predict": {"device_mode": "wrong"}},
-    ]
-
-    for i, config in enumerate(mini_configs):
-        device = tf_predictor.decide_device(config)
-        assert device in ["cpu", "cuda:0"], "Irrelevant device has been returned"
-
-        if i == 0:
-            assert device == "cpu", "By default the 'cpu' device should be used"
-        elif i == 1:
-            assert device == "cpu", "An explicit 'cpu' device was given"
-        elif i == 2 or i == 3:
-            assert device == "cuda:0", "Cuda or gpu should become 'cuda:0'"
-        elif i == 4:
-            assert device == "mps"
-        else:
-            assert (
-                device == "cpu"
-            ), "A fall-back to 'cpu' should happen in case of error"

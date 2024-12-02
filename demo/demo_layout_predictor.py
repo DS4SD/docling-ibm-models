@@ -9,13 +9,13 @@ import sys
 import time
 from pathlib import Path
 
+import torch
 import numpy as np
 from huggingface_hub import snapshot_download
 from PIL import Image, ImageDraw, ImageFont
 
 # TODO: Switch LayoutModel implementations
 from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
-
 # from docling_ibm_models.layoutmodel.layout_predictor_jit import LayoutPredictor
 
 
@@ -68,8 +68,11 @@ def demo(
     If you want to load from PDF:
     pdf_image = pyvips.Image.new_from_file("test_data/ADS.2007.page_123.pdf", page=0)
     """
+    # TODO: Switch LayoutModel implementations
     # Create the layout predictor
-    lpredictor = LayoutPredictor(artifact_path, device=device, num_threads=num_threads)
+    # lpredictor = LayoutPredictor(artifact_path, device=device, num_threads=num_threads)
+    lpredictor = LayoutPredictor(artifact_path, device=torch.device(device.lower()),
+                                 num_threads=num_threads)
 
     # Predict all test png images
     t0 = time.perf_counter()
@@ -122,13 +125,9 @@ def main(args):
     # Ensure the viz dir
     Path(viz_dir).mkdir(parents=True, exist_ok=True)
 
-    # TODO: Switch LayoutModel implementations
     # Download models from HF
-    # download_path = snapshot_download(repo_id="ds4sd/docling-models")
-    # artifact_path = os.path.join(download_path, "model_artifacts/layout/beehive_v0.0.5_pt")
-
-    # artifact_path = "/Users/nli/model_weights/docling/layout_model/online_docling_models/v2.0.1"
-    artifact_path = "/Users/nli/model_weights/docling/layout_model/safe_tensors"
+    download_path = snapshot_download(repo_id="ds4sd/docling-models", revision="refs/pr/2")
+    artifact_path = os.path.join(download_path, "model_artifacts/layout")
 
     # Test the LayoutPredictor
     demo(logger, artifact_path, device, num_threads, img_dir, viz_dir)
