@@ -21,17 +21,19 @@ class LayoutPredictor:
     Document layout prediction using safe tensors
     """
 
-    def __init__(self,
-                 artifact_path: str,
-                 device: torch.device = torch.device("cpu"),
-                 num_threads: int = 4):
+    def __init__(
+        self,
+        artifact_path: str,
+        device: torch.device = torch.device("cpu"),
+        num_threads: int = 4,
+    ):
         """
         Provide the artifact path that contains the LayoutModel file
 
         Parameters
         ----------
         artifact_path: Path for the model torch file.
-        device: (Optional) torch device to run the inference. 
+        device: (Optional) torch device to run the inference.
         num_threads: (Optional) Number of threads to run the inference if device = 'cpu'
 
         Raises

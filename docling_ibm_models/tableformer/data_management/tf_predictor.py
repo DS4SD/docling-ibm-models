@@ -122,17 +122,15 @@ class TFPredictor:
     """
 
     def __init__(
-            self,
-            config,
-            device: torch.device = torch.device("cpu"),
-            num_threads: int = 4):
+        self, config, device: torch.device = torch.device("cpu"), num_threads: int = 4
+    ):
         r"""
         Parameters
         ----------
         config : dict Parameters configuration
-        device: (Optional) torch device to run the inference. 
+        device: (Optional) torch device to run the inference.
         num_threads: (Optional) Number of threads to run the inference if device = 'cpu'
-        
+
         Raises
         ------
         ValueError

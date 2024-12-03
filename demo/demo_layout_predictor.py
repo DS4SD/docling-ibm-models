@@ -9,13 +9,14 @@ import sys
 import time
 from pathlib import Path
 
-import torch
 import numpy as np
+import torch
 from huggingface_hub import snapshot_download
 from PIL import Image, ImageDraw, ImageFont
 
 # TODO: Switch LayoutModel implementations
 from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
+
 # from docling_ibm_models.layoutmodel.layout_predictor_jit import LayoutPredictor
 
 
@@ -71,8 +72,9 @@ def demo(
     # TODO: Switch LayoutModel implementations
     # Create the layout predictor
     # lpredictor = LayoutPredictor(artifact_path, device=device, num_threads=num_threads)
-    lpredictor = LayoutPredictor(artifact_path, device=torch.device(device.lower()),
-                                 num_threads=num_threads)
+    lpredictor = LayoutPredictor(
+        artifact_path, device=torch.device(device.lower()), num_threads=num_threads
+    )
 
     # Predict all test png images
     t0 = time.perf_counter()
@@ -126,7 +128,9 @@ def main(args):
     Path(viz_dir).mkdir(parents=True, exist_ok=True)
 
     # Download models from HF
-    download_path = snapshot_download(repo_id="ds4sd/docling-models", revision="refs/pr/2")
+    download_path = snapshot_download(
+        repo_id="ds4sd/docling-models", revision="refs/pr/2"
+    )
     artifact_path = os.path.join(download_path, "model_artifacts/layout")
 
     # Test the LayoutPredictor
