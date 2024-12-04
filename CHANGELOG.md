@@ -1,3 +1,9 @@
+## [v2.0.7](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.7) - 2024-12-02
+
+### Fix
+
+* Improve numpy compatibility pinning ([#57](https://github.com/DS4SD/docling-ibm-models/issues/57)) ([`de2f241`](https://github.com/DS4SD/docling-ibm-models/commit/de2f241ea8577636bd72367a97691613e93e20de))
+
 ## [v2.0.6](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.6) - 2024-11-20
 
 ### Fix
