@@ -47,7 +47,7 @@ def test_layoutpredictor(init: dict):
     r"""
     Unit test for the LayoutPredictor
     """
-    device = torch.device("cpu")
+    device = "cpu"
     num_threads = 2
 
     # Initialize LayoutPredictor
@@ -57,7 +57,7 @@ def test_layoutpredictor(init: dict):
 
     # Check info
     info = lpredictor.info()
-    assert info["device"] == device.type, "Wronly set device"
+    assert info["device"] == device, "Wronly set device"
     assert info["num_threads"] == num_threads, "Wronly set number of threads"
 
     # Unsupported input image

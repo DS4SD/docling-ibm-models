@@ -69,12 +69,8 @@ def demo(
     If you want to load from PDF:
     pdf_image = pyvips.Image.new_from_file("test_data/ADS.2007.page_123.pdf", page=0)
     """
-    # TODO: Switch LayoutModel implementations
     # Create the layout predictor
-    # lpredictor = LayoutPredictor(artifact_path, device=device, num_threads=num_threads)
-    lpredictor = LayoutPredictor(
-        artifact_path, device=torch.device(device.lower()), num_threads=num_threads
-    )
+    lpredictor = LayoutPredictor(artifact_path, device=device, num_threads=num_threads)
 
     # Predict all test png images
     t0 = time.perf_counter()

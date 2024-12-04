@@ -481,7 +481,7 @@ def test_tf_predictor(init):
     Test the TFPredictor
     """
     viz = True
-    device = torch.device("cpu")
+    device = "cpu"
     num_threads = 2
 
     # Load the docling_api_data

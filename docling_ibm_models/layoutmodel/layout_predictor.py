@@ -24,7 +24,7 @@ class LayoutPredictor:
     def __init__(
         self,
         artifact_path: str,
-        device: torch.device = torch.device("cpu"),
+        device: str = "cpu",
         num_threads: int = 4,
     ):
         """
@@ -33,7 +33,7 @@ class LayoutPredictor:
         Parameters
         ----------
         artifact_path: Path for the model torch file.
-        device: (Optional) torch device to run the inference.
+        device: (Optional) device to run the inference.
         num_threads: (Optional) Number of threads to run the inference if device = 'cpu'
 
         Raises
@@ -71,9 +71,9 @@ class LayoutPredictor:
         self._size = np.asarray([[self._image_size, self._image_size]], dtype=np.int64)
 
         # Set number of threads for CPU
-        self._device = device
+        self._device = torch.device(device)
         self._num_threads = num_threads
-        if self._device.type == "cpu":
+        if device == "cpu":
             torch.set_num_threads(self._num_threads)
 
         # Model file and configurations
