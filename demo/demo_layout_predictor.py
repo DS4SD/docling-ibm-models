@@ -14,10 +14,7 @@ import torch
 from huggingface_hub import snapshot_download
 from PIL import Image, ImageDraw, ImageFont
 
-# TODO: Switch LayoutModel implementations
 from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
-
-# from docling_ibm_models.layoutmodel.layout_predictor_jit import LayoutPredictor
 
 
 def save_predictions(prefix: str, viz_dir: str, img_fn: str, img, predictions: dict):
@@ -88,9 +85,6 @@ def demo(
 
             # Save predictions
             logger.info("Saving prediction visualization in: '%s'", viz_dir)
-
-            # TODO: Switch LayoutModel implementations
-            # save_predictions("JIT", viz_dir, img_fn, image, preds)
             save_predictions("ST", viz_dir, img_fn, image, preds)
     total_ms = 1000 * (time.perf_counter() - t0)
     avg_ms = (total_ms / img_counter) if img_counter > 0 else 0
