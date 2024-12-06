@@ -24,7 +24,7 @@ packages = [
 python = "^3.9"
 torch = "^2.2.2"
 torchvision = "^0"
-transformers = "^4.46.2"
+transformers = "^4.42.0"
 accelerate = "^1.1.1"
 numpy = ">=1.24.4,<3.0.0"
 jsonlines = "^3.1.0"
