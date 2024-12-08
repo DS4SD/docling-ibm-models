@@ -80,45 +80,26 @@ def otsl_sqr_chk(rs_list, logdebug):
     return isSquare
 
 
-def decide_device(config: dict) -> str:
-    r"""
-    Decide the inference device based on the "predict.device_mode" parameter
-    """
-    device_mode = config["predict"].get("device_mode", "cpu")
-    num_gpus = torch.cuda.device_count()
-
-    if device_mode == "auto":
-        device = "cuda:0" if num_gpus > 0 else "cpu"
-    elif device_mode in ["gpu", "cuda"]:
-        device = "cuda:0"
-    else:
-        device = "cpu"
-    return device
-
-
 class TFPredictor:
     r"""
     Table predictions for the in-memory Docling API
     """
 
-    def __init__(self, config, num_threads: int = None):
+    def __init__(self, config, device: str = "cpu", num_threads: int = 4):
         r"""
-        The number of threads is decided, in the following order, by:
-        1. The init method parameter `num_threads`, if it is set.
-        2. The envvar "OMP_NUM_THREADS", if it is set.
-        3. The default value 4.
-
         Parameters
         ----------
-        config : dict
-            Parameters configuration
+        config : dict Parameters configuration
+        device: (Optional) torch device to run the inference.
+        num_threads: (Optional) Number of threads to run the inference if device = 'cpu'
+
         Raises
         ------
         ValueError
         When the model cannot be found
         """
-        self._device = decide_device(config)
-        self._log().info("Running on device: {}".format(self._device))
+        self._device = torch.device(device)
+        self._log().info("Running on device: {}".format(device))
 
         self._config = config
         self.enable_post_process = True
@@ -131,11 +112,10 @@ class TFPredictor:
 
         self._init_word_map()
 
-        # Set the number of torch threads
-        if num_threads is None:
-            num_threads = int(os.environ.get("OMP_NUM_THREADS", 4))
-        self._num_threads = num_threads
-        torch.set_num_threads(num_threads)
+        # Set the number of threads
+        if device == "cpu":
+            self._num_threads = num_threads
+            torch.set_num_threads(self._num_threads)
 
         # Load the model
         self._model = self._load_model()

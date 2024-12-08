@@ -19,21 +19,9 @@ repos:
         entry: poetry lock --check
         pass_filenames: false
         language: system
-
-# Ready to be enabled soon
-#  - repo: local
-#    hooks:
-#      - id: system
-#        name: flake8
-#        entry: poetry run flake8 docling_ibm_models
-#        pass_filenames: false
-#        language: system
-#        files: '\.py$'
-#  - repo: local
-#    hooks:
-#     - id: system
-#       name: MyPy
-#       entry: poetry run mypy docling_ibm_models
-#       pass_filenames: false
-#       language: system
-#       files: '\.py$'
+      # - id: system
+      #   name: MyPy
+      #   entry: poetry run mypy docling_ibm_models
+      #   pass_filenames: false
+      #   language: system
+      #   files: '\.py$'
