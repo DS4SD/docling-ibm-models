@@ -86,8 +86,8 @@ class LayoutPredictor:
         model_config = os.path.join(artifact_path, "config.json")
         self._image_processor = RTDetrImageProcessor.from_json_file(processor_config)
         self._model = RTDetrForObjectDetection.from_pretrained(
-            artifact_path, config=model_config, device_map=self._device
-        )
+            artifact_path, config=model_config
+        ).to(self._device)
         self._model.eval()
 
         _log.debug("LayoutPredictor settings: {}".format(self.info()))
