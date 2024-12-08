@@ -136,7 +136,7 @@ if __name__ == "__main__":
         "-d", "--device", required=False, default="cpu", help="One of [cpu, cuda, mps]"
     )
     parser.add_argument(
-        "-n", "--num_threads", required=False, default=None, help="Number of threads"
+        "-n", "--num_threads", required=False, default=4, help="Number of threads"
     )
     parser.add_argument(
         "-i",
