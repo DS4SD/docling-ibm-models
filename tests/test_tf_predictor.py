@@ -412,64 +412,15 @@ test_config = {
 configs = [test_config]
 
 
-def combine_checkpoint(save_dir):
-    r"""
-    Check if the checkpoint file is present as one part or 2 splits.
-    Combine parts into one file if needed
-
-    Parameters
-    ----------
-    save_dir : string
-        The directory to check for checkpoint files or splits of it
-
-    Returns
-    -------
-    int
-        0: The full checkpoint file already exists, no combine was needed
-        1: The splits were found, a combine has been done
-       -1: No full checkpoint and no splits exist. Error
-    """
-    # Check if the full file already exists
-    full_file_pattern = os.path.join(save_dir, "*.check")
-    candidate = glob.glob(full_file_pattern)
-    if len(candidate) == 1:
-        print(
-            "combine_checkpoint: The whole checkpoint file was found: {}".format(
-                candidate[0]
-            )
-        )
-        return 0
-
-    # Check for splits
-    splits_pattern = os.path.join(save_dir, "*.check.a[a-z]")
-    splits = glob.glob(splits_pattern)
-    splits.sort()
-    if splits is None or len(splits) == 0:
-        print(
-            "combine_checkpoint: Both the full checkpoint and the splits are missing. Error"
-        )
-        return -1
-
-    # Combine splits
-    full_fn = splits[0].rpartition(".check")[0] + ".check"
-    with open(full_fn, "wb") as f_out:
-        for split_fn in splits:
-            with open(split_fn, "rb") as f_split:
-                print("combine_checkpoint: read split: {}".format(split_fn))
-                f_out.write(f_split.read())
-
-    print("combine_checkpoint: combine splits as: {}".format(full_fn))
-    return 1
-
-
 @pytest.fixture(scope="module")
 def init() -> list[dict]:
     r"""
     Initialize the testing environment
     """
-    # Download models from HF
-    download_path = snapshot_download(repo_id="ds4sd/docling-models", revision="refs/pr/2")
-    save_dir = os.path.join(download_path, "model_artifacts/tableformer")
+    # TODO :Download models from HF
+    # download_path = snapshot_download(repo_id="ds4sd/docling-models", revision="refs/pr/2")
+    download_path = "/Users/nli/model_weights/docling/safe_tensors_ready_for_docling/"
+    save_dir = os.path.join(download_path, "model_artifacts/tableformer/fast")
 
     # Add the missing config keys
     for config in configs:
@@ -503,9 +454,9 @@ def test_tf_predictor(init):
     # Loop over the test configs
     for test_config in init:
         # Check if the checkpoint file should be combined
-        assert (
-            combine_checkpoint(test_config["model"]["save_dir"]) >= 0
-        ), "Model checkpoint is missing"
+        # assert (
+        #     combine_checkpoint(test_config["model"]["save_dir"]) >= 0
+        # ), "Model checkpoint is missing"
 
         # Loop over the iocr_pages
         predictor = TFPredictor(test_config, device=device, num_threads=num_threads)
@@ -628,5 +579,3 @@ def test_tf_predictor(init):
     profiling_data = AggProfiler().get_data()
     print("Profiling data:")
     print(json.dumps(profiling_data, indent=2, sort_keys=True))
-
-    # assert False

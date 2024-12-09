@@ -2,14 +2,17 @@
 # Copyright IBM Corp. 2024 - 2024
 # SPDX-License-Identifier: MIT
 #
+import glob
 import json
 import logging
 import os
 from itertools import groupby
+from pathlib import Path
 
 import cv2
 import numpy as np
 import torch
+from safetensors.torch import load_model
 
 import docling_ibm_models.tableformer.common as c
 import docling_ibm_models.tableformer.data_management.transforms as T
@@ -98,7 +101,8 @@ class TFPredictor:
         ValueError
         When the model cannot be found
         """
-        self._device = torch.device(device)
+        # self._device = torch.device(device)
+        self._device = device
         self._log().info("Running on device: {}".format(device))
 
         self._config = config
@@ -180,10 +184,21 @@ class TFPredictor:
         if self._model_type == "TableModel02":
             self._remove_padding = True
 
-        # Load model from checkpoint
-        success, _, _, _, _ = model.load()
-        if not success:
-            err_msg = "Cannot load the model"
+        # Load model from safetensors
+        save_dir = self._config["model"]["save_dir"]
+        models_fn = glob.glob(f"{save_dir}/tableformer_*.safetensors")
+        if not models_fn:
+            err_msg = "Not able to find a model file for {}".format(self._model_type)
+            self._log().error(err_msg)
+            raise ValueError(err_msg)
+        model_fn = models_fn[
+            0
+        ]  # Take the first tableformer safetensors file inside the save_dir
+        missing, unexpected = load_model(model, model_fn, device=self._device)
+        if missing or unexpected:
+            err_msg = "Not able to load the model weights for {}".format(
+                self._model_type
+            )
             self._log().error(err_msg)
             raise ValueError(err_msg)
 
