@@ -66,7 +66,7 @@ class LayoutPredictor:
         self._black_classes = set()  # ["Form", "Key-Value Region"])
 
         # Set basic params
-        self._threshold = 0.3 # Score threshold
+        self._threshold = 0.3  # Score threshold
         self._image_size = 640
         self._size = np.asarray([[self._image_size, self._image_size]], dtype=np.int64)
 
