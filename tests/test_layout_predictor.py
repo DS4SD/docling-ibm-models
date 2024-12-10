@@ -34,7 +34,7 @@ def init() -> dict:
     }
 
     # Download models from HF
-    download_path = snapshot_download(repo_id="ds4sd/docling-models", revision="refs/pr/2")
+    download_path = snapshot_download(repo_id="ds4sd/docling-models", revision="v2.1.0")
     artifact_path = os.path.join(download_path, "model_artifacts/layout")
 
     # Add the missing config keys

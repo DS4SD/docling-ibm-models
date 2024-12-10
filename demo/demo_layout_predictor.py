@@ -119,7 +119,7 @@ def main(args):
 
     # Download models from HF
     download_path = snapshot_download(
-        repo_id="ds4sd/docling-models", revision="refs/pr/2"
+        repo_id="ds4sd/docling-models", revision="v2.1.0"
     )
     artifact_path = os.path.join(download_path, "model_artifacts/layout")
 
