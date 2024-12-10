@@ -417,9 +417,8 @@ def init() -> list[dict]:
     r"""
     Initialize the testing environment
     """
-    # TODO :Download models from HF
-    # download_path = snapshot_download(repo_id="ds4sd/docling-models", revision="refs/pr/2")
-    download_path = "/Users/nli/model_weights/docling/safe_tensors_ready_for_docling/"
+    # Download models from HF
+    download_path = snapshot_download(repo_id="ds4sd/docling-models", revision="refs/pr/2")
     save_dir = os.path.join(download_path, "model_artifacts/tableformer/fast")
 
     # Add the missing config keys
