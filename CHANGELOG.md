@@ -1,3 +1,9 @@
+## [v2.0.8](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.8) - 2024-12-11
+
+### Fix
+
+* Remove print statements ([#63](https://github.com/DS4SD/docling-ibm-models/issues/63)) ([`da13863`](https://github.com/DS4SD/docling-ibm-models/commit/da13863034a897be96e0768671ee348a7051cf90))
+
 ## [v2.0.7](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.7) - 2024-12-02
 
 ### Fix
