@@ -33,6 +33,8 @@ from docling_ibm_models.tableformer.utils.app_profiler import AggProfiler
 # LOG_LEVEL = logging.DEBUG
 LOG_LEVEL = logging.WARN
 
+logger = s.get_custom_logger(__name__, LOG_LEVEL)
+
 
 class bcolors:
     HEADER = "\033[95m"
@@ -56,17 +58,17 @@ def otsl_sqr_chk(rs_list, logdebug):
 
         totcelnum = rs_list.count("fcel") + rs_list.count("ecel")
         if logdebug:
-            print("Total number of cells = {}".format(totcelnum))
+            logger.debug("Total number of cells = {}".format(totcelnum))
 
         for ind, ln in enumerate(rs_list_split):
             ln.append("nl")
             if logdebug:
-                print("{}".format(ln))
+                logger.debug("{}".format(ln))
             if len(ln) != init_tag_len:
                 isSquare = False
         if isSquare:
             if logdebug:
-                print(
+                logger.debug(
                     "{}*OK* Table is square! *OK*{}".format(
                         bcolors.OKGREEN, bcolors.ENDC
                     )
@@ -74,8 +76,8 @@ def otsl_sqr_chk(rs_list, logdebug):
         else:
             if logdebug:
                 err_name = "{}***** ERR ******{}"
-                print(err_name.format(bcolors.FAIL, bcolors.ENDC))
-                print(
+                logger.debug(err_name.format(bcolors.FAIL, bcolors.ENDC))
+                logger.debug(
                     "{}*ERR* Table is not square! *ERR*{}".format(
                         bcolors.FAIL, bcolors.ENDC
                     )

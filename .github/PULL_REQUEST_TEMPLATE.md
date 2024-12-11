@@ -13,8 +13,6 @@ Resolves #
 
 **Checklist:**
 
-- [ ] **Commit Message Formatting**: Commit titles and messages follow guidelines in the
-  [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/#summary).
 - [ ] Documentation has been updated, if necessary.
 - [ ] Examples have been added, if necessary.
 - [ ] Tests have been added, if necessary.

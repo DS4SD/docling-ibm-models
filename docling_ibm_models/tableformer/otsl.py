@@ -49,15 +49,15 @@ def otsl_sqr_chk(rs_list, name, logdebug):
                 isSquare = False
         if isSquare:
             if logdebug:
-                print(
+                logger.debug(
                     "{}*OK* Table is square! *OK*{}".format(
                         bcolors.OKGREEN, bcolors.ENDC
                     )
                 )
         else:
             err_name = "{}*ERR* " + name + " *ERR*{}"
-            print(err_name.format(bcolors.FAIL, bcolors.ENDC))
-            print(
+            logger.debug(err_name.format(bcolors.FAIL, bcolors.ENDC))
+            logger.debug(
                 "{}*ERR* Table is not square! *ERR*{}".format(
                     bcolors.FAIL, bcolors.ENDC
                 )
@@ -89,9 +89,9 @@ def otsl_tags_cells_sync_chk(rs_list, cells, name, logdebug):
             countCellTags += 1
     if countCellTags != len(cells):
         err_name = "{}*!ERR* " + name + " *ERR!*{}"
-        print(err_name.format(bcolors.FAIL, bcolors.ENDC))
+        logger.debug(err_name.format(bcolors.FAIL, bcolors.ENDC))
         err_msg = "{}*!ERR* Tags are not in sync with cells! *ERR!*{}"
-        print(err_msg.format(bcolors.FAIL, bcolors.ENDC))
+        logger.debug(err_msg.format(bcolors.FAIL, bcolors.ENDC))
         isGood = False
     return isGood
 
@@ -131,11 +131,13 @@ def otsl_to_html(rs_list, logdebug):
         return rs_list
     html_table = []
     if logdebug:
-        print("{}*Reconstructing HTML...*{}".format(bcolors.WARNING, bcolors.ENDC))
+        logger.debug(
+            "{}*Reconstructing HTML...*{}".format(bcolors.WARNING, bcolors.ENDC)
+        )
 
     if not otsl_sqr_chk(rs_list, "---", logdebug):
         # PAD TABLE TO SQUARE
-        print("{}*Padding to square...*{}".format(bcolors.WARNING, bcolors.ENDC))
+        logger.debug("{}*Padding to square...*{}".format(bcolors.WARNING, bcolors.ENDC))
         rs_list = otsl_pad_to_sqr(rs_list, "lcel")
 
     # 2D structure, line by line:
@@ -144,7 +146,7 @@ def otsl_to_html(rs_list, logdebug):
     ]
 
     if logdebug:
-        print("")
+        logger.debug("")
 
     # Sequentially store indexes of 2D spans that were registered to avoid re-registering them
     registry_2d_span = []
@@ -182,9 +184,9 @@ def otsl_to_html(rs_list, logdebug):
                         span = True
                 # Check if it has vertical span:
                 if rs_row_ind + 1 < len(rs_list_split):
-                    # print(">>>")
-                    # print(rs_list_split[rs_row_ind + 1])
-                    # print(">>> rs_cell_ind = {}".format(rs_cell_ind))
+                    # logger.debug(">>>")
+                    # logger.debug(rs_list_split[rs_row_ind + 1])
+                    # logger.debug(">>> rs_cell_ind = {}".format(rs_cell_ind))
                     if rs_list_split[rs_row_ind + 1][rs_cell_ind] == "ucel":
                         ddist = otsl_check_down(rs_list_split, rs_cell_ind, rs_row_ind)
                         span = True
@@ -198,12 +200,12 @@ def otsl_to_html(rs_list, logdebug):
                         span = True
                         # Check if this 2D span was already registered,
                         # If not - register, if yes - cancel span
-                        # print("rs_cell_ind: {}, xrdist:{}".format(rs_cell_ind, xrdist))
-                        # print("rs_row_ind: {}, xddist:{}".format(rs_cell_ind, xrdist))
+                        # logger.debug("rs_cell_ind: {}, xrdist:{}".format(rs_cell_ind, xrdist))
+                        # logger.debug("rs_row_ind: {}, xddist:{}".format(rs_cell_ind, xrdist))
                         for x in range(rs_cell_ind, xrdist + rs_cell_ind):
                             for y in range(rs_row_ind, xddist + rs_row_ind):
                                 reg2dind = str(x) + "_" + str(y)
-                                # print(reg2dind)
+                                # logger.debug(reg2dind)
                                 if reg2dind in registry_2d_span:
                                     # Cell of the span is already in, cancel current span
                                     span = False
@@ -232,9 +234,13 @@ def otsl_to_html(rs_list, logdebug):
         html_table.extend(html_list)
 
     if logdebug:
-        print("*********************** registry_2d_span ***************************")
-        print(registry_2d_span)
-        print("********************************************************************")
+        logger.debug(
+            "*********************** registry_2d_span ***************************"
+        )
+        logger.debug(registry_2d_span)
+        logger.debug(
+            "********************************************************************"
+        )
 
     return html_table
 
@@ -316,20 +322,24 @@ def html_to_otsl(table, writer, logdebug, extra_debug, include_html, use_writer)
     current_line_expands = []
 
     if logdebug:
-        print("")
-        print("*** {}: {} ***".format(table["split"], table["filename"]))
+        logger.debug("")
+        logger.debug("*** {}: {} ***".format(table["split"], table["filename"]))
 
     colnum = 0
 
     if extra_debug:
-        print("========================== Input HTML ============================")
-        print(table_html_structure["tokens"])
-        print("==================================================================")
+        logger.debug(
+            "========================== Input HTML ============================"
+        )
+        logger.debug(table_html_structure["tokens"])
+        logger.debug(
+            "=================================================================="
+        )
 
     if logdebug:
-        print("********")
-        print("* OTSL *")
-        print("********")
+        logger.debug("********")
+        logger.debug("* OTSL *")
+        logger.debug("********")
 
     for i in range(len(table_html_structure["tokens"])):
         html_tag = table_html_structure["tokens"][i]
@@ -377,7 +387,7 @@ def html_to_otsl(table, writer, logdebug, extra_debug, include_html, use_writer)
                         extra_columns = pre_line_len - cur_line_len - 1
                         if extra_columns > 0:
                             if extra_debug:
-                                print(
+                                logger.debug(
                                     "Extra columns needed in row: {}".format(
                                         extra_columns
                                     )
@@ -534,11 +544,11 @@ def html_to_otsl(table, writer, logdebug, extra_debug, include_html, use_writer)
                 writer.write(out_line)
 
     if logdebug:
-        print("{}Reconstructed HTML:{}".format(bcolors.OKGREEN, bcolors.ENDC))
-        print(rHTML)
+        logger.debug("{}Reconstructed HTML:{}".format(bcolors.OKGREEN, bcolors.ENDC))
+        logger.debug(rHTML)
         # original HTML
         oHTML = out_line["html"]["html_structure"]
-        print("{}Original HTML:{}".format(bcolors.OKBLUE, bcolors.ENDC))
-        print(oHTML)
+        logger.debug("{}Original HTML:{}".format(bcolors.OKBLUE, bcolors.ENDC))
+        logger.debug(oHTML)
 
     return True, out_line
