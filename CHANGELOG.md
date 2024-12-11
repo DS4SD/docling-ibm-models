@@ -1,3 +1,13 @@
+## [v3.0.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.0.0) - 2024-12-11
+
+### Feature
+
+* New API for models initialization with accelerators parameters. Use HF implementation for LayoutPredictor. Migrate models to safetensors format. ([#50](https://github.com/DS4SD/docling-ibm-models/issues/50)) ([`04295b2`](https://github.com/DS4SD/docling-ibm-models/commit/04295b2dd36a20f88d03b3bcc971097d0a0cd9d6))
+
+### Breaking
+
+* New API for models initialization with accelerators parameters. Use HF implementation for LayoutPredictor. Migrate models to safetensors format. ([#50](https://github.com/DS4SD/docling-ibm-models/issues/50)) ([`04295b2`](https://github.com/DS4SD/docling-ibm-models/commit/04295b2dd36a20f88d03b3bcc971097d0a0cd9d6))
+
 ## [v2.0.8](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.8) - 2024-12-11
 
 ### Fix
