@@ -468,7 +468,7 @@ def init() -> list[dict]:
     Initialize the testing environment
     """
     # Download models from HF
-    download_path = snapshot_download(repo_id="ds4sd/docling-models")
+    download_path = snapshot_download(repo_id="ds4sd/docling-models", revision="v2.0.1")
     save_dir = os.path.join(download_path, "model_artifacts/tableformer")
 
     # Add the missing config keys
