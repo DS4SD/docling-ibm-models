@@ -1,22 +1,32 @@
-#
-# Copyright IBM Corp. 2024 - 2024
-# SPDX-License-Identifier: MIT
-#
+import argparse
 import glob
 import json
 import os
 from pathlib import Path
 
-import torch
-import pytest
+from huggingface_hub import snapshot_download
+import numpy as np
 import cv2
 from PIL import Image, ImageDraw
-from huggingface_hub import snapshot_download
 
-from docling_ibm_models.tableformer.utils.app_profiler import AggProfiler
 import docling_ibm_models.tableformer.data_management.tf_predictor as tf_predictor
 from docling_ibm_models.tableformer.data_management.tf_predictor import \
     TFPredictor
+
+########################################################################################### 
+# Debug
+import sys
+import warnings
+import traceback
+
+def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
+    log = sys.stderr
+    traceback.print_stack(file=log)
+    log.write(warnings.formatwarning(message, category, filename, lineno, line))
+
+warnings.showwarning = warn_with_traceback
+########################################################################################### 
+
 
 """
 - Implements TF predictor to accept the input format from IOCR, e.g.
@@ -43,7 +53,6 @@ docling_api_data = {
     ],
 }
 
-# The config is missing the keys: "model.save_dir"
 test_config = {
     "dataset": {
         "type": "TF_prepared",
@@ -70,7 +79,7 @@ test_config = {
     "model": {
         "type": "TableModel04_rs",
         "name": "14_128_256_4_true",
-        # "save_dir": "./tests/test_data/model_artifacts/",
+        "save_dir": "./tests/test_data/model_artifacts/",
         "backbone": "resnet18",
         "enc_image_size": 28,
         "tag_embed_dim": 16,
@@ -104,7 +113,8 @@ test_config = {
         "padding": False,
         "padding_size": 50,
         "disable_post_process": False,
-        "profiling": True
+        "profiling": False,
+        "device_mode": "auto",
     },
     "dataset_wordmap": {
         "word_map_tag": {
@@ -409,30 +419,79 @@ test_config = {
 }
 
 # ==================================================================================================
+
 configs = [test_config]
 
 
-@pytest.fixture(scope="module")
 def init() -> list[dict]:
     r"""
     Initialize the testing environment
     """
     # Download models from HF
-    download_path = snapshot_download(repo_id="ds4sd/docling-models", revision="v2.1.0")
-    save_dir = os.path.join(download_path, "model_artifacts/tableformer/fast")
+    download_path = snapshot_download(repo_id="ds4sd/docling-models")
+    save_dir = os.path.join(download_path, "model_artifacts/tableformer")
 
     # Add the missing config keys
     for config in configs:
         config["model"]["save_dir"] = save_dir
     return configs
 
-def test_tf_predictor(init):
+def combine_checkpoint(save_dir):
+    r"""
+    Check if the checkpoint file is present as one part or 2 splits.
+    Combine parts into one file if needed
+
+    Parameters
+    ----------
+    save_dir : string
+        The directory to check for checkpoint files or splits of it
+
+    Returns
+    -------
+    int
+        0: The full checkpoint file already exists, no combine was needed
+        1: The splits were found, a combine has been done
+       -1: No full checkpoint and no splits exist. Error
+    """
+    # Check if the full file already exists
+    full_file_pattern = os.path.join(save_dir, "*.check")
+    candidate = glob.glob(full_file_pattern)
+    if len(candidate) == 1:
+        print(
+            "combine_checkpoint: The whole checkpoint file was found: {}".format(
+                candidate[0]
+            )
+        )
+        return 0
+
+    # Check for splits
+    splits_pattern = os.path.join(save_dir, "*.check.a[a-z]")
+    splits = glob.glob(splits_pattern)
+    splits.sort()
+    if splits is None or len(splits) == 0:
+        print(
+            "combine_checkpoint: Both the full checkpoint and the splits are missing. Error"
+        )
+        return -1
+
+    # Combine splits
+    full_fn = splits[0].rpartition(".check")[0] + ".check"
+    with open(full_fn, "wb") as f_out:
+        for split_fn in splits:
+            with open(split_fn, "rb") as f_split:
+                print("combine_checkpoint: read split: {}".format(split_fn))
+                f_out.write(f_split.read())
+
+    print("combine_checkpoint: combine splits as: {}".format(full_fn))
+    return 1
+
+
+def test_tf_predictor():
     r"""
     Test the TFPredictor
     """
     viz = True
-    device = "cpu"
-    num_threads = 2
+    configs = init()
 
     # Load the docling_api_data
     iocr_pages = []
@@ -444,21 +503,33 @@ def test_tf_predictor(init):
         with open(table_json_fn, "r") as fp:
             iocr_page_raw = json.load(fp)
             iocr_page = iocr_page_raw["pages"][0]
-        # TODO(Nikos): Try to remove the opencv dependency
         iocr_page["image"] = cv2.imread(png_image_fn)
+        # page_image = cv2.imread(png_image_fn)
         iocr_page["png_image_fn"] = png_image_fn
         iocr_page["table_bboxes"] = table_bboxes_b
         iocr_pages.append(iocr_page)
 
     # Loop over the test configs
-    for test_config in init:
+    for test_config in configs:
         # Check if the checkpoint file should be combined
-        # assert (
-        #     combine_checkpoint(test_config["model"]["save_dir"]) >= 0
-        # ), "Model checkpoint is missing"
+        assert (
+            combine_checkpoint(test_config["model"]["save_dir"]) >= 0
+        ), "Model checkpoint is missing"
 
         # Loop over the iocr_pages
-        predictor = TFPredictor(test_config, device=device, num_threads=num_threads)
+        predictor = TFPredictor(test_config)
+
+        ########################################################################################### 
+        # Debug: Measure TF parameters
+        tf_params_count = 0
+        for tf_module_params in predictor._model.parameters():
+            module_params = 1
+            for dim in tf_module_params.size():
+                module_params *= dim
+            tf_params_count += module_params
+        print("TF params: {}".format(tf_params_count))
+        ########################################################################################### 
+
         for iocr_page in iocr_pages:
             # Prepare "Predict" parameters
             # iw = iocr_page["width"]
@@ -481,11 +552,7 @@ def test_tf_predictor(init):
             # List of dicts per table: [{"tf_responses":[...], "predict_details": {}}]
 
             multi_tf_output = predictor.multi_table_predict(
-                iocr_page,
-                table_bboxes, 
-                do_matching=True,
-                correct_overlapping_cells=False,
-                sort_row_col_indexes=True
+                iocr_page, table_bboxes, True
             )
 
             # Test output for validity, create visualizations...
@@ -574,7 +641,123 @@ def test_tf_predictor(init):
                     viz_fn = os.path.join(viz_root, png_img_bfn1)
                     img.save(viz_fn)
 
-    # Get profiling data
-    profiling_data = AggProfiler().get_data()
-    print("Profiling data:")
-    print(json.dumps(profiling_data, indent=2, sort_keys=True))
+
+def run_tf_predictor(page_input_fn: str, table_bboxes_fn: str):
+    r"""
+    Run the TFPredictor with external files to provide ethe page_input and table_bboxes
+    """
+    viz = True
+
+    configs = init()
+    config = configs[0]
+    predictor = TFPredictor(config)
+
+    assert (
+        combine_checkpoint(config["model"]["save_dir"]) >= 0
+    ), "Model checkpoint is missing"
+
+    # Load the page_input and table_bboxes
+    with open(page_input_fn, "r") as fd:
+        page_input = json.load(fd)
+        page_input["image"] = np.array(page_input["image"], dtype=np.float32)
+    
+    with open(table_bboxes_fn, "r") as fd:
+        table_bboxes = json.load(fd)
+
+    multi_tf_output = predictor.multi_table_predict(page_input, table_bboxes, True)
+
+    # Test output for validity, create visualizations...
+    for t, tf_output in enumerate(multi_tf_output):
+        tf_responses = tf_output["tf_responses"]
+        predict_details = tf_output["predict_details"]
+        assert tf_responses is not None, "Empty prediction response"
+        assert isinstance(
+            tf_responses, list
+        ), " Wrong response type. It should be a list"
+
+        img = page_input["image"]
+        img1 = ImageDraw.Draw(img)
+
+        xt0 = table_bboxes[t][0]
+        yt0 = table_bboxes[t][1]
+        xt1 = max(xt0, table_bboxes[t][2])
+        yt1 = max(yt0, table_bboxes[t][3])
+        img1.rectangle(((xt0, yt0), (xt1, yt1)), outline="pink", width=5)
+
+        if viz:
+            # # Visualize original OCR words:
+            # for iocr_word in iocr_page["tokens"]:
+            #     xi0 = iocr_word["bbox"]["l"]
+            #     yi0 = iocr_word["bbox"]["t"]
+            #     xi1 = max(xi0, iocr_word["bbox"]["r"])
+            #     yi1 = max(yi0, iocr_word["bbox"]["b"])
+            #     img1.rectangle(((xi0, yi0), (xi1, yi1)), outline="gray")
+            # Visualize original docling_ibm_models.tableformer predictions:
+            for predicted_bbox in predict_details["prediction_bboxes_page"]:
+                xp0 = predicted_bbox[0] - 1
+                yp0 = predicted_bbox[1] - 1
+                xp1 = max(xp0, predicted_bbox[2] + 1)
+                yp1 = max(yp0, predicted_bbox[3] + 1)
+                img1.rectangle(((xp0, yp0), (xp1, yp1)), outline="green")
+
+        # Check the structure of the list items
+        for i, response in enumerate(tf_responses):
+            assert (
+                "bbox" in response
+            ), "bbox field is missing from response: " + str(i)
+            assert (
+                "text_cell_bboxes" in response
+            ), "text_cell_bboxes is missing: " + str(i)
+            assert (
+                "row_span" in response
+            ), "row_span is missing from resp: " + str(i)
+            assert (
+                "col_span" in response
+            ), "col_span is missing from response: " + str(i)
+            # print("*********** column_header: {}".format(response["column_header"]))
+            if viz:
+                # Visualization:
+                for text_cell in response["text_cell_bboxes"]:
+                    xc0 = text_cell["l"]
+                    yc0 = text_cell["t"]
+                    xc1 = max(xc0, text_cell["r"])
+                    yc1 = max(yc0, text_cell["b"])
+                    img1.rectangle(((xc0, yc0), (xc1, yc1)), outline="red")
+
+                x0 = response["bbox"]["l"] - 2
+                y0 = response["bbox"]["t"] - 2
+                x1 = max(x0, response["bbox"]["r"] + 2)
+                y1 = max(y0, response["bbox"]["b"] + 2)
+
+                if response["column_header"]:
+                    img1.rectangle(
+                        ((x0, y0), (x1, y1)), outline="blue", width=2
+                    )
+                elif response["row_header"]:
+                    img1.rectangle(
+                        ((x0, y0), (x1, y1)), outline="magenta", width=2
+                    )
+                elif response["row_section"]:
+                    img1.rectangle(
+                        ((x0, y0), (x1, y1)), outline="brown", width=2
+                    )
+                else:
+                    img1.rectangle(
+                        ((x0, y0), (x1, y1)), outline="black", width=1
+                    )
+        if viz:
+            viz_root = "./tests/test_data/viz/"
+            Path(viz_root).mkdir(parents=True, exist_ok=True)
+            png_img_bfn1 = "run_test.png"
+            viz_fn = os.path.join(viz_root, png_img_bfn1)
+            img.save(viz_fn)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("page_input_fn", help="File path of the page input data")
+    parser.add_argument("table_bboxes_fn", help="File path of the table bboxes data")
+    args = parser.parse_args()
+
+    run_tf_predictor(args.page_input_fn, args.table_bboxes_fn)
+    # test_tf_predictor()

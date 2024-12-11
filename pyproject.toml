@@ -24,12 +24,14 @@ packages = [
 python = "^3.9"
 torch = "^2.2.2"
 torchvision = "^0"
+transformers = "^4.42.0"
 numpy = ">=1.24.4,<3.0.0"
 jsonlines = "^3.1.0"
 Pillow = "^10.0.0"
 tqdm = "^4.64.0"
 opencv-python-headless = "^4.6.0.66"
 huggingface_hub = ">=0.23,<1"
+safetensors = {version=">=0.4.3,<1", extras=["torch"]}
 
 [tool.poetry.group.dev.dependencies]
 black = {extras = ["jupyter"], version = "^24.4.2"}
@@ -96,3 +98,16 @@ branch = "main"
 parser_angular_allowed_types = "build,chore,ci,docs,feat,fix,perf,style,refactor,test"
 parser_angular_minor_types = "feat"
 parser_angular_patch_types = "fix,perf"
+
+
+# [tool.mypy]
+# pretty = true
+# no_implicit_optional = true
+# python_version = "3.10"
+#
+# [[tool.mypy.overrides]]
+# module = [
+#     "torchvision.*",
+#     "transformers.*"
+# ]
+# ignore_missing_imports = true

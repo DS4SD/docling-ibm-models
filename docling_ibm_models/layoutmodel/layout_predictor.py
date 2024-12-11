@@ -2,6 +2,7 @@
 # Copyright IBM Corp. 2024 - 2024
 # SPDX-License-Identifier: MIT
 #
+import logging
 import os
 from collections.abc import Iterable
 from typing import Union
@@ -10,38 +11,30 @@ import numpy as np
 import torch
 import torchvision.transforms as T
 from PIL import Image
+from transformers import RTDetrForObjectDetection, RTDetrImageProcessor
 
-MODEL_CHECKPOINT_FN = "model.pt"
-DEFAULT_NUM_THREADS = 4
+_log = logging.getLogger(__name__)
 
 
 class LayoutPredictor:
-    r"""
-    Document layout prediction using torch
+    """
+    Document layout prediction using safe tensors
     """
 
     def __init__(
-        self, artifact_path: str, num_threads: int = None, use_cpu_only: bool = False
+        self,
+        artifact_path: str,
+        device: str = "cpu",
+        num_threads: int = 4,
     ):
-        r"""
+        """
         Provide the artifact path that contains the LayoutModel file
-
-        The number of threads is decided, in the following order, by:
-        1. The init method parameter `num_threads`, if it is set.
-        2. The envvar "OMP_NUM_THREADS", if it is set.
-        3. The default value DEFAULT_NUM_THREADS.
-
-        The execution provided is decided, in the following order:
-        1. If the init method parameter `cpu_only` is True or the envvar "USE_CPU_ONLY" is set,
-           it uses the "CPUExecutionProvider".
-        3. Otherwise if the "CUDAExecutionProvider" is present, use:
-            ["CUDAExecutionProvider", "CPUExecutionProvider"]:
 
         Parameters
         ----------
         artifact_path: Path for the model torch file.
-        num_threads: (Optional) Number of threads to run the inference.
-        use_cpu_only: (Optional) If True, it forces CPU as the execution provider.
+        device: (Optional) device to run the inference.
+        num_threads: (Optional) Number of threads to run the inference if device = 'cpu'
 
         Raises
         ------
@@ -70,40 +63,51 @@ class LayoutPredictor:
         }
 
         # Blacklisted classes
-        self._black_classes = set(["Form", "Key-Value Region"])
+        self._black_classes = set()  # ["Form", "Key-Value Region"])
 
         # Set basic params
-        self._threshold = 0.6  # Score threshold
+        self._threshold = 0.3  # Score threshold
         self._image_size = 640
         self._size = np.asarray([[self._image_size, self._image_size]], dtype=np.int64)
-        self._use_cpu_only = use_cpu_only or ("USE_CPU_ONLY" in os.environ)
 
-        # Model file
-        self._torch_fn = os.path.join(artifact_path, MODEL_CHECKPOINT_FN)
-        if not os.path.isfile(self._torch_fn):
-            raise FileNotFoundError("Missing torch file: {}".format(self._torch_fn))
-
-        # Get env vars
-        if num_threads is None:
-            num_threads = int(os.environ.get("OMP_NUM_THREADS", DEFAULT_NUM_THREADS))
+        # Set number of threads for CPU
+        self._device = torch.device(device)
         self._num_threads = num_threads
+        if device == "cpu":
+            torch.set_num_threads(self._num_threads)
 
-        self.model = torch.jit.load(self._torch_fn)
+        # Model file and configurations
+        self._st_fn = os.path.join(artifact_path, "model.safetensors")
+        if not os.path.isfile(self._st_fn):
+            raise FileNotFoundError("Missing safe tensors file: {}".format(self._st_fn))
+
+        # Load model and move to device
+        processor_config = os.path.join(artifact_path, "preprocessor_config.json")
+        model_config = os.path.join(artifact_path, "config.json")
+        self._image_processor = RTDetrImageProcessor.from_json_file(processor_config)
+        self._model = RTDetrForObjectDetection.from_pretrained(
+            artifact_path, config=model_config
+        ).to(self._device)
+        self._model.eval()
+
+        _log.debug("LayoutPredictor settings: {}".format(self.info()))
 
     def info(self) -> dict:
-        r"""
+        """
         Get information about the configuration of LayoutPredictor
         """
         info = {
-            "torch_file": self._torch_fn,
-            "use_cpu_only": self._use_cpu_only,
+            "safe_tensors_file": self._st_fn,
+            "device": self._device.type,
+            "num_threads": self._num_threads,
             "image_size": self._image_size,
             "threshold": self._threshold,
         }
         return info
 
+    @torch.inference_mode()
     def predict(self, orig_img: Union[Image.Image, np.ndarray]) -> Iterable[dict]:
-        r"""
+        """
         Predict bounding boxes for a given image.
         The origin (0, 0) is the top-left corner and the predicted bbox coords are provided as:
         [left, top, right, bottom]
@@ -128,40 +132,44 @@ class LayoutPredictor:
         else:
             raise TypeError("Not supported input image format")
 
-        w, h = page_img.size
-        orig_size = torch.tensor([w, h])[None]
-
-        transforms = T.Compose(
-            [
-                T.Resize((640, 640)),
-                T.ToTensor(),
-            ]
+        resize = {"height": self._image_size, "width": self._image_size}
+        inputs = self._image_processor(
+            images=page_img,
+            return_tensors="pt",
+            size=resize,
+        ).to(self._device)
+        outputs = self._model(**inputs)
+        results = self._image_processor.post_process_object_detection(
+            outputs,
+            target_sizes=torch.tensor([page_img.size[::-1]]),
+            threshold=self._threshold,
         )
-        img = transforms(page_img)[None]
-        # Predict
-        with torch.no_grad():
-            labels, boxes, scores = self.model(img, orig_size)
 
-        # Yield output
-        for label_idx, box, score in zip(labels[0], boxes[0], scores[0]):
-            # Filter out blacklisted classes
-            label_idx = int(label_idx.item())
+        w, h = page_img.size
+
+        result = results[0]
+        for score, label_id, box in zip(
+            result["scores"], result["labels"], result["boxes"]
+        ):
             score = float(score.item())
-            label = self._classes_map[label_idx + 1]
-            if label in self._black_classes:
+
+            label_id = int(label_id.item()) + 1  # Advance the label_id
+            label_str = self._classes_map[label_id]
+
+            # Filter out blacklisted classes
+            if label_str in self._black_classes:
                 continue
 
-            # Check against threshold
-            if score > self._threshold:
-                l = min(w, max(0, box[0]))
-                t = min(h, max(0, box[1]))
-                r = min(w, max(0, box[2]))
-                b = min(h, max(0, box[3]))
-                yield {
-                    "l": l,
-                    "t": t,
-                    "r": r,
-                    "b": b,
-                    "label": label,
-                    "confidence": score,
-                }
+            bbox_float = [float(b.item()) for b in box]
+            l = min(w, max(0, bbox_float[0]))
+            t = min(h, max(0, bbox_float[1]))
+            r = min(w, max(0, bbox_float[2]))
+            b = min(h, max(0, bbox_float[3]))
+            yield {
+                "l": l,
+                "t": t,
+                "r": r,
+                "b": b,
+                "label": label_str,
+                "confidence": score,
+            }
