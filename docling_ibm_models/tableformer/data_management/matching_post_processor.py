@@ -96,10 +96,10 @@ class MatchingPostProcessor:
                         if cell["cell_class"] <= 1:
                             allow_class = False
                     else:
-                        print("***")
-                        print("no cell_class in...")
-                        print(cell)
-                        print("***")
+                        self._log().debug("***")
+                        self._log().debug("no cell_class in...")
+                        self._log().debug(cell)
+                        self._log().debug("***")
                     if allow_class:
                         match_list = matches[pdf_cell_id]
                         for match in match_list:
