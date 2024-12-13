@@ -1,3 +1,9 @@
+## [v3.1.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.1.0) - 2024-12-13
+
+### Feature
+
+* Add arguments for LayoutPredictor ([#66](https://github.com/DS4SD/docling-ibm-models/issues/66)) ([`fe6a476`](https://github.com/DS4SD/docling-ibm-models/commit/fe6a476ab549eec5b75eb2296ab1182ecb8a7412))
+
 ## [v3.0.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.0.0) - 2024-12-11
 
 ### Feature
