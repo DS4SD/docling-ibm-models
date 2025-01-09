@@ -25,7 +25,10 @@ python = "^3.9"
 torch = "^2.2.2"
 torchvision = "^0"
 transformers = "^4.42.0"
-numpy = ">=1.24.4,<3.0.0"
+numpy = [
+    { version = ">=1.24.4,<3.0.0", markers = 'sys_platform != "darwin" or platform_machine != "x86_64"' },
+    { version = ">=1.24.4,<2.0.0", markers = 'sys_platform == "darwin" and platform_machine == "x86_64"' },
+]
 jsonlines = "^3.1.0"
 Pillow = "^10.0.0"
 tqdm = "^4.64.0"
