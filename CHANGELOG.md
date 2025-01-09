@@ -1,3 +1,9 @@
+## [v3.1.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.1.1) - 2025-01-09
+
+### Fix
+
+* Force numpy < 2.0.0 on mac intel ([#69](https://github.com/DS4SD/docling-ibm-models/issues/69)) ([`7f9365f`](https://github.com/DS4SD/docling-ibm-models/commit/7f9365f1bc7c867d6621272a02cef34367d12055))
+
 ## [v3.1.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.1.0) - 2024-12-13
 
 ### Feature
