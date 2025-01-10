@@ -17,8 +17,13 @@ from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
-
-from transformers import AutoConfig, AutoModelForCausalLM
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    OPTConfig,
+    OPTForCausalLM,
+    OPTModel,
+)
 from transformers.modeling_outputs import (
     BaseModelOutputWithPast,
     CausalLMOutputWithPast,
@@ -26,13 +31,17 @@ from transformers.modeling_outputs import (
 
 from docling_ibm_models.code_formula_model.models.sam import build_sam_vit_b
 
-from transformers import OPTConfig, OPTModel, OPTForCausalLM
-
 
 class SamOptConfig(OPTConfig):
     model_type = "sam_opt"
 
-    def __init__(self, sam_image_size=1024, sam_mm_projector_in=1024, sam_mm_projector_out=768, **kwargs):
+    def __init__(
+        self,
+        sam_image_size=1024,
+        sam_mm_projector_in=1024,
+        sam_mm_projector_out=768,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.sam_image_size = sam_image_size
         self.sam_mm_projector_in = sam_mm_projector_in
@@ -79,16 +88,24 @@ class SamOPTModel(OPTModel):
                 image_features = self.mm_projector(image_features)
 
             new_input_embeds = []
-            for cur_input_ids, cur_input_embeds, cur_image_features in zip(input_ids, inputs_embeds, image_features):
-                image_start_token_position = torch.where(cur_input_ids == im_start_token)[0].item()
+            for cur_input_ids, cur_input_embeds, cur_image_features in zip(
+                input_ids, inputs_embeds, image_features
+            ):
+                image_start_token_position = torch.where(
+                    cur_input_ids == im_start_token
+                )[0].item()
 
-                cur_image_features = cur_image_features.to(device=cur_input_embeds.device)
+                cur_image_features = cur_image_features.to(
+                    device=cur_input_embeds.device
+                )
                 num_patches = cur_image_features.shape[0]
                 cur_input_embeds = torch.cat(
                     (
                         cur_input_embeds[: image_start_token_position + 1],
                         cur_image_features,
-                        cur_input_embeds[image_start_token_position + num_patches + 1 :],
+                        cur_input_embeds[
+                            image_start_token_position + num_patches + 1 :
+                        ],
                     ),
                     dim=0,
                 )

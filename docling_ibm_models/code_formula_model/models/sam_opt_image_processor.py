@@ -2,10 +2,10 @@
 # Copyright IBM Corp. 2024 - 2024
 # SPDX-License-Identifier: MIT
 #
-from transformers.image_processing_utils import ImageProcessingMixin
-from torchvision.transforms import functional as F
 from PIL import Image
+from torchvision.transforms import functional as F
 from transformers import AutoImageProcessor
+from transformers.image_processing_utils import ImageProcessingMixin
 
 
 class SamOptImageProcessor(ImageProcessingMixin):
