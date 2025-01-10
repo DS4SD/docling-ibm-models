@@ -1,3 +1,9 @@
+## [v3.1.2](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.1.2) - 2025-01-10
+
+### Fix
+
+* Use old transformers version with old torch version ([#70](https://github.com/DS4SD/docling-ibm-models/issues/70)) ([`b3e072e`](https://github.com/DS4SD/docling-ibm-models/commit/b3e072e193482088e58b5e76216cb86e26e7f52e))
+
 ## [v3.1.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.1.1) - 2025-01-09
 
 ### Fix
