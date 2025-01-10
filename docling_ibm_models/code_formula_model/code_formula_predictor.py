@@ -10,13 +10,12 @@ import torch
 from PIL import Image
 from transformers import AutoTokenizer
 
-from docling_ibm_models.code_formula_model.utils.constants import *
-
-from docling_ibm_models.code_formula_model.utils.conversations import conv_v1
-
 from docling_ibm_models.code_formula_model.models.sam_opt import SamOPTForCausalLM
-from docling_ibm_models.code_formula_model.models.sam_opt_image_processor import SamOptImageProcessor
-
+from docling_ibm_models.code_formula_model.models.sam_opt_image_processor import (
+    SamOptImageProcessor,
+)
+from docling_ibm_models.code_formula_model.utils.constants import *
+from docling_ibm_models.code_formula_model.utils.conversations import conv_v1
 
 _log = logging.getLogger(__name__)
 
@@ -67,10 +66,12 @@ class CodeFormulaPredictor:
         if device == "cpu":
             torch.set_num_threads(self._num_threads)
 
-        self._tokenizer = AutoTokenizer.from_pretrained(artifacts_path, use_fast=True, padding_side='left')
+        self._tokenizer = AutoTokenizer.from_pretrained(
+            artifacts_path, use_fast=True, padding_side="left"
+        )
         self._model = SamOPTForCausalLM.from_pretrained(artifacts_path).to(self._device)
         self._model.eval()
-        
+
         self._image_processor = SamOptImageProcessor.from_pretrained(artifacts_path)
 
         _log.debug("CodeFormulaModel settings: {}".format(self.info()))
@@ -174,7 +175,9 @@ class CodeFormulaPredictor:
             temperature = None
 
         if len(labels) != len(images):
-            raise Exception("The number of images must be the same as the number of labels.")
+            raise Exception(
+                "The number of images must be the same as the number of labels."
+            )
 
         images_tmp = []
         for image in images:
@@ -187,7 +190,9 @@ class CodeFormulaPredictor:
             images_tmp.append(image)
         images = images_tmp
 
-        images_tensor = torch.stack([self._image_processor(img) for img in images]).to(self._device)
+        images_tensor = torch.stack([self._image_processor(img) for img in images]).to(
+            self._device
+        )
 
         prompts = [self._get_prompt(label) for label in labels]
 

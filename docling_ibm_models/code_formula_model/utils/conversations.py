@@ -1,17 +1,20 @@
 import dataclasses
-from enum import auto, Enum
+from enum import Enum, auto
 from typing import List
 
 
 class SeparatorStyle(Enum):
     """Different separator style."""
+
     SINGLE = auto()
     TWO = auto()
     MPT = auto()
 
+
 @dataclasses.dataclass
 class Conversation:
     """A class that keeps all conversation history."""
+
     system: str
     roles: List[str]
     messages: List[List[str]]
@@ -36,7 +39,7 @@ class Conversation:
 
     def get_prompt(self):
         if self.sep_style == SeparatorStyle.SINGLE:
-            ret = self.system + self.sep + '\n'
+            ret = self.system + self.sep + "\n"
             for role, message in self.messages:
                 if message:
                     if type(message) is tuple:
@@ -58,9 +61,9 @@ class Conversation:
             return ret
         if self.sep_style == SeparatorStyle.MPT:
             if self.system:
-                ret = self.system + self.sep 
+                ret = self.system + self.sep
             else:
-                ret = ''
+                ret = ""
             for role, message in self.messages:
                 if message:
                     if type(message) is tuple:
@@ -74,6 +77,7 @@ class Conversation:
 
     def append_message(self, role, message):
         self.messages.append([role, message])
+
 
 conv_v1 = Conversation(
     system="A chat between a curious user and an artificial intelligence assistant. "
