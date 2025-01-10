@@ -29,8 +29,8 @@ from docling_ibm_models.code_formula_model.models.sam import build_sam_vit_b
 from transformers import OPTConfig, OPTModel, OPTForCausalLM
 
 
-class varyOptConfig(OPTConfig):
-    model_type = "vary_opt"
+class SamOptConfig(OPTConfig):
+    model_type = "sam_opt"
 
     def __init__(self, sam_image_size=1024, sam_mm_projector_in=1024, sam_mm_projector_out=768, **kwargs):
         super().__init__(**kwargs)
@@ -39,11 +39,11 @@ class varyOptConfig(OPTConfig):
         self.sam_mm_projector_out = sam_mm_projector_out
 
 
-class varyOPTModel(OPTModel):
-    config_class = varyOptConfig
+class SamOPTModel(OPTModel):
+    config_class = SamOptConfig
 
     def __init__(self, config: OPTConfig):
-        super(varyOPTModel, self).__init__(config)
+        super(SamOPTModel, self).__init__(config)
         self.vision_tower = build_sam_vit_b(image_size=config.sam_image_size)
 
         self.mm_projector = nn.Linear(
@@ -97,7 +97,7 @@ class varyOPTModel(OPTModel):
 
             inputs_embeds = torch.stack(new_input_embeds, dim=0)
 
-        return super(varyOPTModel, self).forward(
+        return super(SamOPTModel, self).forward(
             input_ids=None,
             attention_mask=attention_mask,
             past_key_values=past_key_values,
@@ -109,12 +109,12 @@ class varyOPTModel(OPTModel):
         )
 
 
-class varyOPTForCausalLM(OPTForCausalLM):
-    config_class = varyOptConfig
+class SamOPTForCausalLM(OPTForCausalLM):
+    config_class = SamOptConfig
 
     def __init__(self, config):
         super(OPTForCausalLM, self).__init__(config)
-        self.model = varyOPTModel(config)
+        self.model = SamOPTModel(config)
 
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
@@ -213,5 +213,5 @@ class varyOPTForCausalLM(OPTForCausalLM):
         return model_inputs
 
 
-AutoConfig.register("vary_opt", varyOptConfig)
-AutoModelForCausalLM.register(varyOptConfig, varyOPTForCausalLM)
+AutoConfig.register("sam_opt", SamOptConfig)
+AutoModelForCausalLM.register(SamOptConfig, SamOPTForCausalLM)
