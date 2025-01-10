@@ -8,7 +8,7 @@ from PIL import Image
 from transformers import AutoImageProcessor
 
 
-class VaryOptImageProcessor(ImageProcessingMixin):
+class SamOptImageProcessor(ImageProcessingMixin):
 
     def __init__(self, size=(1024, 1024), mean=None, std=None, **kwargs):
         super().__init__(**kwargs)
@@ -32,4 +32,4 @@ class VaryOptImageProcessor(ImageProcessingMixin):
         return image
 
 
-AutoImageProcessor.register(VaryOptImageProcessor, VaryOptImageProcessor)
+AutoImageProcessor.register(SamOptImageProcessor, SamOptImageProcessor)
