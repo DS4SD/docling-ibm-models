@@ -2,11 +2,14 @@
 # Copyright IBM Corp. 2024 - 2024
 # SPDX-License-Identifier: MIT
 #
+import os
 import numpy as np
 import pytest
 from PIL import Image
 
 from docling_ibm_models.code_formula_model.code_formula_predictor import CodeFormulaPredictor
+
+from huggingface_hub import snapshot_download
 
 @pytest.fixture(scope="module")
 def init() -> dict:
@@ -28,19 +31,16 @@ def init() -> dict:
             },
         ],
         "info": {
-            "device": "cpu",
+            "device": "auto",
             "temperature": 0,
         },
     }
 
     # Download models from HF
-    # TODO: do this
-    # download_path = snapshot_download(repo_id="ds4sd/docling-models", revision="v2.1.0")
-    # artifact_path = os.path.join(download_path, "model_artifacts/layout")
+    download_path = snapshot_download(repo_id="ds4sd/CodeFormula")
+    artifact_path = os.path.join(download_path, "")
     
-    init["artifact_path"] = (
-        "/dccstor/doc_fig_class/DocFM-Vision-Pretrainer/Vary-master/checkpoints_new_code_equation_model/checkpoint-7000/"
-    )
+    init["artifact_path"] = artifact_path
 
     return init
 

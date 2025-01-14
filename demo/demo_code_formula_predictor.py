@@ -77,9 +77,9 @@ def main(args):
 
     # ! TODO: change this
     # Download models from HF
-    # download_path = snapshot_download(repo_id="ds4sd/docling-models", revision="v2.1.0")
-    # artifact_path = os.path.join(download_path, "model_artifacts/layout")
-    artifact_path = "/dccstor/doc_fig_class/DocFM-Vision-Pretrainer/Vary-master/checkpoints_new_code_equation_model/checkpoint-7000/"
+    download_path = snapshot_download(repo_id="ds4sd/CodeFormula")
+    artifact_path = os.path.join(download_path, "")
+    # artifact_path = "/dccstor/doc_fig_class/DocFM-Vision-Pretrainer/Vary-master/checkpoints_new_code_equation_model/checkpoint-7000/"
 
     # Test the LayoutPredictor
     demo(logger, artifact_path, device, num_threads, image_dir, viz_dir)
