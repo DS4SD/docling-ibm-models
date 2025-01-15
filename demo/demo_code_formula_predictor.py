@@ -75,14 +75,11 @@ def main(args):
     # Ensure the viz dir
     Path(viz_dir).mkdir(parents=True, exist_ok=True)
 
-    # ! TODO: change this
     # Download models from HF
     download_path = snapshot_download(repo_id="ds4sd/CodeFormula")
-    artifact_path = os.path.join(download_path, "")
-    # artifact_path = "/dccstor/doc_fig_class/DocFM-Vision-Pretrainer/Vary-master/checkpoints_new_code_equation_model/checkpoint-7000/"
 
-    # Test the LayoutPredictor
-    demo(logger, artifact_path, device, num_threads, image_dir, viz_dir)
+    # Test the Code+Equation model
+    demo(logger, download_path, device, num_threads, image_dir, viz_dir)
 
 
 if __name__ == "__main__":
