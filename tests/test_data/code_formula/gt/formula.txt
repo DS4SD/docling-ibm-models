@@ -1,0 +1,1 @@
+E _ { n l } ( t ) = \frac { 1 } { 8 } \int _ { \varepsilon } ^ { 1 } d \rho ( K _ { 1 } \Psi ) ( K _ { 2 } \Psi ) - \frac { 1 } { 8 } \int _ { \varepsilon } ^ { 1 } d \rho ( K _ { 3 } \Psi ) ( K _ { 4 } \Psi ),
