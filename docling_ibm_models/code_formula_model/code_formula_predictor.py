@@ -209,7 +209,7 @@ class CodeFormulaPredictor:
                 images=images_tensor,
                 do_sample=do_sample,
                 temperature=temperature,
-                max_new_tokens=4096 - prompt_ids.shape[0],
+                max_new_tokens=4096 - prompt_ids.shape[1],
                 use_cache=True,
             )
         else:
@@ -219,7 +219,7 @@ class CodeFormulaPredictor:
                     images=images_tensor,
                     do_sample=do_sample,
                     temperature=temperature,
-                    max_new_tokens=4096 - prompt_ids.shape[0],
+                    max_new_tokens=4096 - prompt_ids.shape[1],
                     use_cache=True,
                 )
 
