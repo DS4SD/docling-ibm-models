@@ -1,3 +1,9 @@
+## [v3.2.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.2.0) - 2025-01-21
+
+### Feature
+
+* Code equation model ([#71](https://github.com/DS4SD/docling-ibm-models/issues/71)) ([`fa51a6c`](https://github.com/DS4SD/docling-ibm-models/commit/fa51a6c00e6e9f5ff8e392eccb2064970bc8ddc2))
+
 ## [v3.1.2](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.1.2) - 2025-01-10
 
 ### Fix
