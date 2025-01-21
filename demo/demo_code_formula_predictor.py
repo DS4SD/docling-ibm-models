@@ -76,7 +76,7 @@ def main(args):
     Path(viz_dir).mkdir(parents=True, exist_ok=True)
 
     # Download models from HF
-    download_path = snapshot_download(repo_id="ds4sd/CodeFormula")
+    download_path = snapshot_download(repo_id="ds4sd/CodeFormula", revision="v1.0.0")
 
     # Test the Code+Equation model
     demo(logger, download_path, device, num_threads, image_dir, viz_dir)
