@@ -3,13 +3,13 @@
 # SPDX-License-Identifier: MIT
 #
 import logging
-from typing import List, Union
+from typing import List, Tuple, Union
 
 import numpy as np
 import torch
-import torch.nn.functional as F
+import torchvision.transforms as transforms
 from PIL import Image
-from transformers import AutoModelForImageClassification, AutoProcessor
+from transformers import AutoConfig, AutoModelForImageClassification
 
 _log = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class DocumentFigureClassifierPredictor:
     r"""
     Model for classifying document figures.
 
-    Classifies every figure in every page as 1 out of 16 possible classes.
+    Classifies figures as 1 out of 16 possible classes.
 
     The classes are:
         1. "bar_chart"
@@ -44,15 +44,19 @@ class DocumentFigureClassifierPredictor:
         The device on which the model is loaded (e.g., 'cpu' or 'cuda').
     _num_threads : int
         Number of threads used for inference when running on CPU.
-    _model : transformers.PreTrainedModel
+    _model : EfficientNetForImageClassification
         Pretrained EfficientNetb0 model.
-    _image_processor : transformers.ImageProcessor
+    _image_processor : EfficientNetImageProcessor
         Processor for normalizing and preparing input images.
+    _classes: List[str]:
+        The classes used by the model.
 
     Methods
     -------
     __init__(artifacts_path, device, num_threads)
         Initializes the DocumentFigureClassifierPredictor with the specified parameters.
+    info() -> dict:
+        Retrieves configuration details of the DocumentFigureClassifierPredictor instance.
     predict(images) -> List[List[float]]
         The confidence scores for the classification of each image.
     """
@@ -85,42 +89,89 @@ class DocumentFigureClassifierPredictor:
         self._model = model.to(device)
         self._model.eval()
 
-        self._image_processor = AutoProcessor.from_pretrained(artifacts_path)
+        self._image_processor = transforms.Compose(
+            [
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406],
+                    std=[0.47853944, 0.4732864, 0.47434163],
+                ),
+            ]
+        )
+
+        config = AutoConfig.from_pretrained(artifacts_path)
+
+        self._classes = list(config.id2label.values())
+        self._classes.sort()
 
         _log.debug("CodeFormulaModel settings: {}".format(self.info()))
 
-    def predict(
-        self, images: List[Union[Image.Image, np.ndarray]]
-    ) -> List[List[float]]:
-        r"""
-        Performs inference on a batch of figures..
-
-        Parameters
-        ----------
-        figures : List[Union[Image.Image, np.ndarray]]
-            Input figures for inference.
+    def info(self) -> dict:
+        """
+        Retrieves configuration details of the DocumentFigureClassifierPredictor instance.
 
         Returns
         -------
-        List[List[float]]:
-            The confidence scores for the classification of each image.
+        dict
+            A dictionary containing configuration details such as the device,
+            the number of threads used and the classe sused by the model.
         """
-        images_tmp = []
+        info = {
+            "device": self._device,
+            "num_threads": self._num_threads,
+            "classes": self._classes,
+        }
+        return info
+
+    def predict(
+        self, images: List[Union[Image.Image, np.ndarray]]
+    ) -> List[Tuple[str, float, List[float]]]:
+        r"""
+            Performs inference on a batch of figures.
+
+        Parameters
+        ----------
+        images : List[Union[Image.Image, np.ndarray]]
+            A list of input images for inference. Each image can either be a
+            PIL.Image.Image object or a NumPy array representing an image.
+
+        Returns
+        -------
+        List[Tuple[str, float, List[float]]]
+            A list of predictions, where each prediction is a tuple containing:
+                - str: The predicted class name for the image.
+                - float: The confidence score of the predicted class.
+                - List[float]: The confidence scores for all possible classes.
+        """
+        processed_images = []
         for image in images:
             if isinstance(image, Image.Image):
-                image = image.convert("RGB")
+                processed_images.append(image.convert("RGB"))
             elif isinstance(image, np.ndarray):
-                image = Image.fromarray(image).convert("RGB")
+                processed_images.append(Image.fromarray(image).convert("RGB"))
             else:
-                raise TypeError("Not supported input image format")
-            images_tmp.append(image)
-        images = images_tmp
+                raise TypeError(
+                    "Supported input formats are PIL.Image.Image or numpy.ndarray."
+                )
+        images = processed_images
 
         # (batch_size, 3, 224, 224)
-        images = self._image_processor(images, return_tensor="pt")
+        images = [self._image_processor(image) for image in images]
+        images = torch.stack(images)
 
         with torch.no_grad():
-            logits = self._model(**images).logits  # (batch_size, num_classes)
-            probs = F.softmax(logits, dim=1).cpu().numpy()  # (batch_size, num_classes)
+            logits = self._model(images).logits  # (batch_size, num_classes)
+            probs = logits.softmax(dim=1)  # (batch_size, num_classes)
+            confs, preds = torch.max(probs, dim=1)  # (batch_size, )
 
-        return probs
+            probs = probs.cpu().numpy().tolist()  # (batch_size, num_classes)
+            preds = preds.cpu().numpy().tolist()  # (batch_size,)
+            confs = confs.cpu().numpy().tolist()  # (batch_size,)
+
+        predictions = [
+            (self._classes[pred], float(conf), prob_dist)
+            for pred, conf, prob_dist in zip(preds, confs, probs)
+        ]
+
+        return predictions
