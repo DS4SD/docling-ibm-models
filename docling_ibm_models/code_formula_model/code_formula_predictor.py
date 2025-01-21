@@ -14,8 +14,6 @@ from docling_ibm_models.code_formula_model.models.sam_opt import SamOPTForCausal
 from docling_ibm_models.code_formula_model.models.sam_opt_image_processor import (
     SamOptImageProcessor,
 )
-from docling_ibm_models.code_formula_model.utils.constants import *
-from docling_ibm_models.code_formula_model.utils.conversations import conv_v1
 
 _log = logging.getLogger(__name__)
 
@@ -118,19 +116,14 @@ class CodeFormulaPredictor:
         else:
             raise NotImplementedError("Label must be either code or formula")
 
-        qs = (
-            DEFAULT_IM_START_TOKEN
-            + DEFAULT_IMAGE_PATCH_TOKEN * IMAGE_TOKEN_LEN
-            + DEFAULT_IM_END_TOKEN
-            + "\n"
+        prompt = (
+            "A chat between a curious user and an artificial intelligence"
+            " assistant. The assistant gives helpful, detailed, and polite answers to"
+            " the user's questions. USER:"
         )
-
-        conversation = conv_v1.copy()
-        conversation.append_message(conversation.roles[0], qs)
-        conversation.append_message(conversation.roles[1], None)
-
-        prompt = conversation.get_prompt()
-        prompt = prompt + "\n" + query
+        prompt += (
+            "<img>" + "<imgpad>" * 256 + "</img>" + "\n" + " ASSISTANT:" + "\n" + query
+        )
 
         return prompt
 

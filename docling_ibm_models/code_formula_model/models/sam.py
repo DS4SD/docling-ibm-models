@@ -1,8 +1,23 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
+#
+# This file was originally developed by Meta Platforms, Inc. as part of
+# the Segment Anything project (https://github.com/facebookresearch/segment-anything).
+# It has been adapted by contributors from the Vary-toy project
+# (https://github.com/Ucas-HaoranWei/Vary-toy).
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at:
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
 
 from functools import partial
 from typing import Optional, Tuple, Type
@@ -96,7 +111,6 @@ class ImageEncoderViT(nn.Module):
 
         self.pos_embed: Optional[nn.Parameter] = None
         if use_abs_pos:
-            # Initialize absolute positional embedding with pretrain image size.
             self.pos_embed = nn.Parameter(
                 torch.zeros(
                     1, img_size // patch_size, img_size // patch_size, embed_dim
@@ -209,13 +223,11 @@ class Block(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         shortcut = x
         x = self.norm1(x)
-        # Window partition
         if self.window_size > 0:
             H, W = x.shape[1], x.shape[2]
             x, pad_hw = window_partition(x, self.window_size)
 
         x = self.attn(x)
-        # Reverse window partition
         if self.window_size > 0:
             x = window_unpartition(x, self.window_size, pad_hw, (H, W))
 

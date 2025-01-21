@@ -20,13 +20,9 @@ class SamOptImageProcessor(ImageProcessingMixin):
         if not isinstance(image, Image.Image):
             raise ValueError("Input must be a PIL Image")
 
-        # Resize the image
         image = F.resize(image, self.size)
-
-        # Convert the image to a tensor
         image = F.to_tensor(image)
 
-        # Normalize the image
         image = F.normalize(image, mean=self.mean, std=self.std)
 
         return image
