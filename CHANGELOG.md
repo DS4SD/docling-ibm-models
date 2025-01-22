@@ -1,3 +1,9 @@
+## [v3.2.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.2.1) - 2025-01-22
+
+### Fix
+
+* Fixed prompt of code formula predictor ([#72](https://github.com/DS4SD/docling-ibm-models/issues/72)) ([`bdcc82f`](https://github.com/DS4SD/docling-ibm-models/commit/bdcc82f21e5bd886508592710eb440781bfeb919))
+
 ## [v3.2.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.2.0) - 2025-01-21
 
 ### Feature
