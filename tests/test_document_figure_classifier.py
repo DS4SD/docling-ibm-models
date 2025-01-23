@@ -28,7 +28,7 @@ def init() -> dict:
             },
             {
                 "label": "map",
-                "image_path": "tests/test_data/figure_classifier/images/map.png",
+                "image_path": "tests/test_data/figure_classifier/images/map.jpg",
             },
         ],
         "info": {
@@ -82,14 +82,14 @@ def test_figure_classifier(init: dict):
         with Image.open(img_path) as img:
 
             output = figure_classifier.predict([img])
-            predicted_class, _, _ = output[0]
+            predicted_class = output[0][0][0]
 
             assert predicted_class == label
 
             # Load images as numpy arrays
             np_arr = np.asarray(img)
             output = figure_classifier.predict([np_arr])
-            predicted_class, _, _ = output[0]
+            predicted_class = output[0][0][0]
 
             assert predicted_class == label
 
@@ -98,5 +98,5 @@ def test_figure_classifier(init: dict):
     images = [Image.open(d["image_path"]) for d in init["test_imgs"]]
 
     outputs = figure_classifier.predict(images)
-    outputs = [output[0] for output in outputs]
+    outputs = [output[0][0] for output in outputs]
     assert outputs == labels

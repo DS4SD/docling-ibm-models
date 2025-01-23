@@ -126,7 +126,7 @@ class DocumentFigureClassifierPredictor:
 
     def predict(
         self, images: List[Union[Image.Image, np.ndarray]]
-    ) -> List[Tuple[str, float, List[float]]]:
+    ) -> List[List[Tuple[str, float]]]:
         r"""
             Performs inference on a batch of figures.
 
@@ -138,11 +138,14 @@ class DocumentFigureClassifierPredictor:
 
         Returns
         -------
-        List[Tuple[str, float, List[float]]]
-            A list of predictions, where each prediction is a tuple containing:
-                - str: The predicted class name for the image.
-                - float: The confidence score of the predicted class.
-                - List[float]: The confidence scores for all possible classes.
+        List[List[Tuple[str, float]]]
+            A list of predictions for each input image. Each prediction is a list of
+            tuples representing the predicted class and confidence score:
+            - str: The predicted class name for the image.
+            - float: The confidence score associated with the predicted class,
+                ranging from 0 to 1.
+
+            The predictions for each image are sorted in descending order of confidence.
         """
         processed_images = []
         for image in images:
@@ -162,16 +165,13 @@ class DocumentFigureClassifierPredictor:
 
         with torch.no_grad():
             logits = self._model(images).logits  # (batch_size, num_classes)
-            probs = logits.softmax(dim=1)  # (batch_size, num_classes)
-            confs, preds = torch.max(probs, dim=1)  # (batch_size, )
+            probs_batch = logits.softmax(dim=1)  # (batch_size, num_classes)
+            probs_batch = probs_batch.cpu().numpy().tolist()
 
-            probs = probs.cpu().numpy().tolist()  # (batch_size, num_classes)
-            preds = preds.cpu().numpy().tolist()  # (batch_size,)
-            confs = confs.cpu().numpy().tolist()  # (batch_size,)
+        predictions_batch = []
+        for probs_image in probs_batch:
+            preds = [(self._classes[i], prob) for i, prob in enumerate(probs_image)]
+            preds.sort(key=lambda t: t[1], reverse=True)
+            predictions_batch.append(preds)
 
-        predictions = [
-            (self._classes[pred], float(conf), prob_dist)
-            for pred, conf, prob_dist in zip(preds, confs, probs)
-        ]
-
-        return predictions
+        return predictions_batch
