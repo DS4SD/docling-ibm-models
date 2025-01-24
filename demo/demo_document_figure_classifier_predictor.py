@@ -48,7 +48,8 @@ def demo(
     )
 
     for i, output in enumerate(outputs):
-        logger.info(f" Output {i}:")
+        image_name = image_names[i]
+        logger.info(f"Predictions for: '{image_name}':")
         for pred in output:
             logger.info(f" Class '{pred[0]}' has probability {pred[1]}")
 
