@@ -161,7 +161,7 @@ class DocumentFigureClassifierPredictor:
 
         # (batch_size, 3, 224, 224)
         images = [self._image_processor(image) for image in images]
-        images = torch.stack(images)
+        images = torch.stack(images).to(self._device)
 
         with torch.no_grad():
             logits = self._model(images).logits  # (batch_size, num_classes)
