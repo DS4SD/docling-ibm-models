@@ -1,3 +1,9 @@
+## [v3.3.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.3.0) - 2025-01-24
+
+### Feature
+
+* New document figure classifier model ([#73](https://github.com/DS4SD/docling-ibm-models/issues/73)) ([`60807a7`](https://github.com/DS4SD/docling-ibm-models/commit/60807a7a72526d2cbcfd494210e580c7b8d21ae5))
+
 ## [v3.2.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.2.1) - 2025-01-22
 
 ### Fix
