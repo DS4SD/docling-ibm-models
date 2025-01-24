@@ -75,9 +75,7 @@ def main(args):
     Path(viz_dir).mkdir(parents=True, exist_ok=True)
 
     # Download models from HF
-    # TODO: change
-    # download_path = snapshot_download(repo_id="ds4sd/dbjejdejd ej", revision="v1.0.0")
-    download_path = "/dccstor/doc_fig_class/figure_classifier/final_model"
+    download_path = snapshot_download(repo_id="ds4sd/DocumentFigureClassifier", revision="v1.0.0")
 
     # Test the figure classifier model
     demo(logger, download_path, device, num_threads, image_dir, viz_dir)

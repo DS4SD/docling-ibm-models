@@ -36,14 +36,10 @@ def init() -> dict:
         },
     }
 
-    # Download models from HF
-    # TODO: change
-    # artifact_path = snapshot_download(
-    #     repo_id="/dccstor/doc_fig_class/figure_classifier/tutto/final_model"
-    # )
-    artifact_path = "/dccstor/doc_fig_class/figure_classifier/final_model"
-
-    init["artifact_path"] = artifact_path
+    # Download models from HF 
+    init["artifact_path"] = snapshot_download(
+        repo_id="ds4sd/DocumentFigureClassifier", revision="v1.0.0"
+    )
 
     return init
 
