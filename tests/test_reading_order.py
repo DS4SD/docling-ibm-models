@@ -5,10 +5,13 @@
 import os
 import json
 import glob
+import copy
 
 import numpy as np
 import pytest
 from PIL import Image
+
+import random
 
 from huggingface_hub import snapshot_download
 
@@ -16,6 +19,8 @@ import docling_ibm_models.layoutmodel.layout_predictor as lp
 from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
 
 from docling_ibm_models.reading_order.reading_order_rb import PageElement, ReadingOrderPredictor
+
+from docling_core.types.doc.document import DoclingDocument, DocItem
 
 @pytest.fixture(scope="module")
 def init() -> dict:
@@ -50,8 +55,7 @@ def init() -> dict:
     
     return init
 
-
-def test_readingorder(init: dict):
+def _test_readingorder(init: dict):
     r"""
     Unit test for the LayoutPredictor
     """
@@ -109,3 +113,39 @@ def test_readingorder(init: dict):
             ordered_elements = romodel.predict_page(page_elements)
 
             print(ordered_elements)
+
+
+def test_readingorder():
+
+    # Init the reading-order model
+    romodel = ReadingOrderPredictor()
+    
+    filenames = sorted(glob.glob("/Users/taa/Documents/projects/docling-eval/benchmarks/DPBench-annotations-v03/json_annotations/*.json"))
+    
+    for filename in filenames:
+
+        true_doc = DoclingDocument.load_from_json(filename=filename)
+
+        true_elememts: List[PageElement] = []
+        for level,item in true_doc.iterate_items():
+            if isinstance(item, DocItem):
+                for prov in item.prov:
+                    true_elememts.append(
+                        PageElement(
+                            cid=len(true_elememts),
+                            pid=0, 
+                            label=item.label,
+                            bbox=prov.bbox
+                        )
+                    )
+
+        rand_elements = copy.deepcopy(true_elememts)
+        random.shuffle(rand_elements)
+        
+        pred_elements = romodel.predict_page(page_elements=rand_elements)    
+        
+        assert len(pred_elements)==len(true_elements), f"len(pred_elements)==len(true_elements), {len(pred_elements)}=={len(true_elements)}"
+
+        for true_elem, pred_elem in zip(true_elements, pred_elements):
+            print("true: ", true_elem.cid, ", pred: ", pred_elem.cid)
+            assert true_elem.cid==pred_elem.cid
