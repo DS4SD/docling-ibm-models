@@ -2,14 +2,17 @@
 # Copyright IBM Corp. 2024 - 2024
 # SPDX-License-Identifier: MIT
 #
+import glob
 import json
 import logging
 import os
 from itertools import groupby
+from pathlib import Path
 
 import cv2
 import numpy as np
 import torch
+from safetensors.torch import load_model
 
 import docling_ibm_models.tableformer.common as c
 import docling_ibm_models.tableformer.data_management.transforms as T
@@ -29,6 +32,8 @@ from docling_ibm_models.tableformer.utils.app_profiler import AggProfiler
 # LOG_LEVEL = logging.INFO
 # LOG_LEVEL = logging.DEBUG
 LOG_LEVEL = logging.WARN
+
+logger = s.get_custom_logger(__name__, LOG_LEVEL)
 
 
 class bcolors:
@@ -53,17 +58,17 @@ def otsl_sqr_chk(rs_list, logdebug):
 
         totcelnum = rs_list.count("fcel") + rs_list.count("ecel")
         if logdebug:
-            print("Total number of cells = {}".format(totcelnum))
+            logger.debug("Total number of cells = {}".format(totcelnum))
 
         for ind, ln in enumerate(rs_list_split):
             ln.append("nl")
             if logdebug:
-                print("{}".format(ln))
+                logger.debug("{}".format(ln))
             if len(ln) != init_tag_len:
                 isSquare = False
         if isSquare:
             if logdebug:
-                print(
+                logger.debug(
                     "{}*OK* Table is square! *OK*{}".format(
                         bcolors.OKGREEN, bcolors.ENDC
                     )
@@ -71,8 +76,8 @@ def otsl_sqr_chk(rs_list, logdebug):
         else:
             if logdebug:
                 err_name = "{}***** ERR ******{}"
-                print(err_name.format(bcolors.FAIL, bcolors.ENDC))
-                print(
+                logger.debug(err_name.format(bcolors.FAIL, bcolors.ENDC))
+                logger.debug(
                     "{}*ERR* Table is not square! *ERR*{}".format(
                         bcolors.FAIL, bcolors.ENDC
                     )
@@ -80,45 +85,27 @@ def otsl_sqr_chk(rs_list, logdebug):
     return isSquare
 
 
-def decide_device(config: dict) -> str:
-    r"""
-    Decide the inference device based on the "predict.device_mode" parameter
-    """
-    device_mode = config["predict"].get("device_mode", "cpu")
-    num_gpus = torch.cuda.device_count()
-
-    if device_mode == "auto":
-        device = "cuda:0" if num_gpus > 0 else "cpu"
-    elif device_mode in ["gpu", "cuda"]:
-        device = "cuda:0"
-    else:
-        device = "cpu"
-    return device
-
-
 class TFPredictor:
     r"""
     Table predictions for the in-memory Docling API
     """
 
-    def __init__(self, config, num_threads: int = None):
+    def __init__(self, config, device: str = "cpu", num_threads: int = 4):
         r"""
-        The number of threads is decided, in the following order, by:
-        1. The init method parameter `num_threads`, if it is set.
-        2. The envvar "OMP_NUM_THREADS", if it is set.
-        3. The default value 4.
-
         Parameters
         ----------
-        config : dict
-            Parameters configuration
+        config : dict Parameters configuration
+        device: (Optional) torch device to run the inference.
+        num_threads: (Optional) Number of threads to run the inference if device = 'cpu'
+
         Raises
         ------
         ValueError
         When the model cannot be found
         """
-        self._device = decide_device(config)
-        self._log().info("Running on device: {}".format(self._device))
+        # self._device = torch.device(device)
+        self._device = device
+        self._log().info("Running on device: {}".format(device))
 
         self._config = config
         self.enable_post_process = True
@@ -131,11 +118,10 @@ class TFPredictor:
 
         self._init_word_map()
 
-        # Set the number of torch threads
-        if num_threads is None:
-            num_threads = int(os.environ.get("OMP_NUM_THREADS", 4))
-        self._num_threads = num_threads
-        torch.set_num_threads(num_threads)
+        # Set the number of threads
+        if device == "cpu":
+            self._num_threads = num_threads
+            torch.set_num_threads(self._num_threads)
 
         # Load the model
         self._model = self._load_model()
@@ -200,10 +186,21 @@ class TFPredictor:
         if self._model_type == "TableModel02":
             self._remove_padding = True
 
-        # Load model from checkpoint
-        success, _, _, _, _ = model.load()
-        if not success:
-            err_msg = "Cannot load the model"
+        # Load model from safetensors
+        save_dir = self._config["model"]["save_dir"]
+        models_fn = glob.glob(f"{save_dir}/tableformer_*.safetensors")
+        if not models_fn:
+            err_msg = "Not able to find a model file for {}".format(self._model_type)
+            self._log().error(err_msg)
+            raise ValueError(err_msg)
+        model_fn = models_fn[
+            0
+        ]  # Take the first tableformer safetensors file inside the save_dir
+        missing, unexpected = load_model(model, model_fn, device=self._device)
+        if missing or unexpected:
+            err_msg = "Not able to load the model weights for {}".format(
+                self._model_type
+            )
             self._log().error(err_msg)
             raise ValueError(err_msg)
 

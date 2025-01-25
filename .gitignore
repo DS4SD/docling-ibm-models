@@ -19,6 +19,9 @@ runs/*
 .DS_Store
 viz/
 
+# VSCode
+.vscode
+
 # VIM
 *.swp
 *.swo

@@ -264,7 +264,7 @@ class CellMatcher:
         r, o = otsl.html_to_otsl(table_html_structure, None, False, False, True, False)
         if not r:
             ermsg = "ERR#: COULD NOT CONVERT TO RS THIS TABLE TO COMPUTE SPANS"
-            print(ermsg)
+            self._log().debug(ermsg)
         else:
             otsl_spans = o["otsl_spans"]
 

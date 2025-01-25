@@ -1,3 +1,91 @@
+## [v3.3.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.3.0) - 2025-01-24
+
+### Feature
+
+* New document figure classifier model ([#73](https://github.com/DS4SD/docling-ibm-models/issues/73)) ([`60807a7`](https://github.com/DS4SD/docling-ibm-models/commit/60807a7a72526d2cbcfd494210e580c7b8d21ae5))
+
+## [v3.2.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.2.1) - 2025-01-22
+
+### Fix
+
+* Fixed prompt of code formula predictor ([#72](https://github.com/DS4SD/docling-ibm-models/issues/72)) ([`bdcc82f`](https://github.com/DS4SD/docling-ibm-models/commit/bdcc82f21e5bd886508592710eb440781bfeb919))
+
+## [v3.2.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.2.0) - 2025-01-21
+
+### Feature
+
+* Code equation model ([#71](https://github.com/DS4SD/docling-ibm-models/issues/71)) ([`fa51a6c`](https://github.com/DS4SD/docling-ibm-models/commit/fa51a6c00e6e9f5ff8e392eccb2064970bc8ddc2))
+
+## [v3.1.2](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.1.2) - 2025-01-10
+
+### Fix
+
+* Use old transformers version with old torch version ([#70](https://github.com/DS4SD/docling-ibm-models/issues/70)) ([`b3e072e`](https://github.com/DS4SD/docling-ibm-models/commit/b3e072e193482088e58b5e76216cb86e26e7f52e))
+
+## [v3.1.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.1.1) - 2025-01-09
+
+### Fix
+
+* Force numpy < 2.0.0 on mac intel ([#69](https://github.com/DS4SD/docling-ibm-models/issues/69)) ([`7f9365f`](https://github.com/DS4SD/docling-ibm-models/commit/7f9365f1bc7c867d6621272a02cef34367d12055))
+
+## [v3.1.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.1.0) - 2024-12-13
+
+### Feature
+
+* Add arguments for LayoutPredictor ([#66](https://github.com/DS4SD/docling-ibm-models/issues/66)) ([`fe6a476`](https://github.com/DS4SD/docling-ibm-models/commit/fe6a476ab549eec5b75eb2296ab1182ecb8a7412))
+
+## [v3.0.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.0.0) - 2024-12-11
+
+### Feature
+
+* New API for models initialization with accelerators parameters. Use HF implementation for LayoutPredictor. Migrate models to safetensors format. ([#50](https://github.com/DS4SD/docling-ibm-models/issues/50)) ([`04295b2`](https://github.com/DS4SD/docling-ibm-models/commit/04295b2dd36a20f88d03b3bcc971097d0a0cd9d6))
+
+### Breaking
+
+* New API for models initialization with accelerators parameters. Use HF implementation for LayoutPredictor. Migrate models to safetensors format. ([#50](https://github.com/DS4SD/docling-ibm-models/issues/50)) ([`04295b2`](https://github.com/DS4SD/docling-ibm-models/commit/04295b2dd36a20f88d03b3bcc971097d0a0cd9d6))
+
+## [v2.0.8](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.8) - 2024-12-11
+
+### Fix
+
+* Remove print statements ([#63](https://github.com/DS4SD/docling-ibm-models/issues/63)) ([`da13863`](https://github.com/DS4SD/docling-ibm-models/commit/da13863034a897be96e0768671ee348a7051cf90))
+
+## [v2.0.7](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.7) - 2024-12-02
+
+### Fix
+
+* Improve numpy compatibility pinning ([#57](https://github.com/DS4SD/docling-ibm-models/issues/57)) ([`de2f241`](https://github.com/DS4SD/docling-ibm-models/commit/de2f241ea8577636bd72367a97691613e93e20de))
+
+## [v2.0.6](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.6) - 2024-11-20
+
+### Fix
+
+* Python3.9 support ([#54](https://github.com/DS4SD/docling-ibm-models/issues/54)) ([`e2b19d9`](https://github.com/DS4SD/docling-ibm-models/commit/e2b19d930279c150557af33f2b08d7abb1f47428))
+
+## [v2.0.5](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.5) - 2024-11-20
+
+### Fix
+
+* Removing dependency from mean_average_precision package (not in use) ([#53](https://github.com/DS4SD/docling-ibm-models/issues/53)) ([`65affef`](https://github.com/DS4SD/docling-ibm-models/commit/65affef1f3ff209a8cdae4201aaaad8872d1069b))
+
+## [v2.0.4](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.4) - 2024-11-18
+
+### Fix
+
+* Remove lxml deps ([#51](https://github.com/DS4SD/docling-ibm-models/issues/51)) ([`7a0cbde`](https://github.com/DS4SD/docling-ibm-models/commit/7a0cbde7e0638bbd91d5905ae457fdcb299ee87f))
+
+## [v2.0.3](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.3) - 2024-10-30
+
+### Fix
+
+* Simplify torch dependencies in the wheels ([#45](https://github.com/DS4SD/docling-ibm-models/issues/45)) ([`bca09f8`](https://github.com/DS4SD/docling-ibm-models/commit/bca09f8331934120e6f542d15aa871f1153ae140))
+
+## [v2.0.2](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.2) - 2024-10-29
+
+### Fix
+
+* **LayoutPredictor:** Ensure that the predicted bboxes are minmaxed inside the image boundaries ([#42](https://github.com/DS4SD/docling-ibm-models/issues/42)) ([`216cee0`](https://github.com/DS4SD/docling-ibm-models/commit/216cee081a1ae8be264074e6d54cff27bf6984cf))
+
 ## [v2.0.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v2.0.1) - 2024-10-16
 
 ### Fix
