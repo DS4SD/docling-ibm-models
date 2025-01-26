@@ -7,7 +7,7 @@ import os
 import copy
 
 from collections.abc import Iterable
-from typing import Union
+from typing import Dict, List
 
 from pydantic import BaseModel
 from docling_core.types.doc.labels import DocItemLabel
@@ -24,6 +24,9 @@ class PageElement(BaseModel):
     
     label: DocItemLabel
 
+    def __str__(self):
+        return f"{self.cid:3.2f}\t{str(self.label):<10}\t{self.bbox.l:3.2f}, {self.bbox.b:3.2f}, {self.bbox.r:3.2f}, {self.bbox.t:3.2f}"
+    
     def __lt__(self, other):
         if self.pid==other.pid:
 
@@ -96,52 +99,63 @@ class ReadingOrderPredictor:
     """
 
     def __init__(self):
+        self.dilated_page_element = True
+        
         self.initialise()
         
     def initialise(self):
         self.h2i_map: Dict[int, int] = {}
         self.i2h_map: Dict[int, int] = {}
 
-        self.l2r_map: Dict[int, [int]] = {}
-        self.r2l_map: Dict[int, [int]] = {}
+        self.l2r_map: Dict[int, List[int]] = {}
+        self.r2l_map: Dict[int, List[int]] = {}
 
-        self.up_map: Dict[int, [int]] = {}
-        self.dn_map: Dict[int, [int]] = {}
+        self.up_map: Dict[int, List[int]] = {}
+        self.dn_map: Dict[int, List[int]] = {}
 
         self.heads: List[int] = []
+
+        self.to_captions: Dict[int, List[int]] = {}
+        self.to_footnotes: Dict[int, List[int]] = {}
+
         
-    def predict_page(self, page_elements: List[PageElement]) -> list[PageElement]:
+    def predict_page(self, page_elements: List[PageElement], page_height: float = 800.0) -> List[PageElement]:
         r"""
         Reorder the output of the 
         """
 
         self.initialise()
+
+        for i,elem in enumerate(page_elements):
+            page_elements[i].bbox = elem.bbox.to_bottom_left_origin(page_height=page_height)
         
         self._init_h2i_map(page_elements)
 
         self._init_l2r_map(page_elements)
-
+        
         self._init_ud_maps(page_elements)
 
-        if True:
+        if self.dilated_page_element:
             dilated_page_elements: List[PageElement] = copy.deepcopy(page_elements) # deep-copy
-            self._do_horizontal_dilation(page_elements, dilated_page_elements);
+            dilated_page_elements = self._do_horizontal_dilation(page_elements, dilated_page_elements);
       
             # redo with dilated provs
             self._init_ud_maps(dilated_page_elements)
-        
+
         self._find_heads(page_elements)
-            
+
         self._sort_ud_maps(page_elements);
-        order: List[int] = self._find_order(page_elements);
+        order: List[int] = self._find_order(page_elements)
         
-        sorted_page_elements: list[PageElement] = [];
+        sorted_page_elements: List[PageElement] = [];
         for ind in order:
-            sorted_page_elements.append(page_elements[ind]);
+            sorted_page_elements.append(page_elements[ind])
 
-        return sorted_page_elements
+        self._find_to_captions(page_elements=sorted_page_elements)
+            
+        return sorted_page_elements, self.to_captions, self.to_footnotes
 
-    def _init_h2i_map(self, page_elems: list[PageElement]):            
+    def _init_h2i_map(self, page_elems: List[PageElement]):            
         self.h2i_map = {}
         self.i2h_map = {} 
 
@@ -149,7 +163,7 @@ class ReadingOrderPredictor:
             self.h2i_map[pelem.cid] = i
             self.i2h_map[i] = pelem.cid
         
-    def _init_l2r_map(self, page_elems: list[PageElement]):
+    def _init_l2r_map(self, page_elems: List[PageElement]):
         self.l2r_map = {}
         self.r2l_map = {} 
 
@@ -162,7 +176,7 @@ class ReadingOrderPredictor:
                     self.l2r_map[i] = j;
                     self.r2l_map[j] = i;
     
-    def _init_ud_maps(self, page_elems: list[PageElement]):
+    def _init_ud_maps(self, page_elems: List[PageElement]):
         self.up_map = {}
         self.dn_map = {}
 
@@ -175,8 +189,8 @@ class ReadingOrderPredictor:
             if j in self.r2l_map:
                 i = self.r2l_map[j]
 
-                dn_map[i] = [j]
-                up_map[j] = [i]
+                self.dn_map[i] = [j]
+                self.up_map[j] = [i]
 
                 continue
 
@@ -209,7 +223,6 @@ class ReadingOrderPredictor:
                     self.up_map[j].append(i)
 
     def _do_horizontal_dilation(self, page_elems, dilated_page_elems):
-        dilated_page_elems = page_elems # // deep-copy
         
         for i,pelem_i in enumerate(dilated_page_elems):
 
@@ -219,14 +232,14 @@ class ReadingOrderPredictor:
             x1 = pelem_i.bbox.r;
             y1 = pelem_i.bbox.t;
             
-            if i in up_map and len(up_map[i])>0:
-                pelem_up = page_elems[up_map[i][0]]
+            if i in self.up_map and len(self.up_map[i])>0:
+                pelem_up = page_elems[self.up_map[i][0]]
                 
                 x0 = min(x0, pelem_up.bbox.l)
                 x1 = max(x1, pelem_up.bbox.r)
 
-            if i in dn_map and len(dn_map[i])>0:
-                pelem_dn = page_elems[dn_map[i][0]]
+            if i in self.dn_map and len(self.dn_map[i])>0:
+                pelem_dn = page_elems[self.dn_map[i][0]]
                 
                 x0 = min(x0, pelem_dn.bbox.l)
                 x1 = max(x1, pelem_dn.bbox.r)
@@ -250,8 +263,10 @@ class ReadingOrderPredictor:
                 dilated_page_elems[i].bbox.r = x1
                 dilated_page_elems[i].bbox.t = y1
 
-    def _find_heads(self, page_elems):
-        #heads:list[int] = []
+        return dilated_page_elems
+                
+    def _find_heads(self, page_elems: List[PageElement]):
+        #heads:List[int] = []
 
         head_page_elems = []
         for key,vals in self.up_map.items():
@@ -262,70 +277,115 @@ class ReadingOrderPredictor:
 
         for item in head_page_elems:
             self.heads.append(self.h2i_map[item.cid])
-
-        return heads
         
-    def _sort_ud_maps(self, provs, h2i_map, i2h_map, up_map, dn_map):
-        for ind_i,vals in dn_map.items():
+    def _sort_ud_maps(self, provs: List[PageElement]):
+        for ind_i,vals in self.dn_map.items():
             
-            child_provs={}
+            child_provs: List[PageElement] = []
             for ind_j in vals:
-                child_provs.push_back(provs[ind_j])
+                child_provs.append(provs[ind_j])
 
             sorted(child_provs)
 
-            dn_map[ind_i] = []
+            self.dn_map[ind_i] = []
             for child in child_provs:
-                dn_map[ind_i].append(h2i_map[child.cid])
+                self.dn_map[ind_i].append(self.h2i_map[child.cid])
 
-    def _find_order(self, provs, heads, up_map, dn_map):
-        order: list[int] = []
+    def _find_order(self, provs: List[PageElement]):
+        order: List[int] = []
 
-        visited: list[bool] = [False for _ in provs]
+        visited: List[bool] = [False for _ in provs]
         
-        for j in heads:
+        for j in self.heads:
 
             if not visited[j]:
 	        
                 order.append(j)
                 visited[j] = True	    
-                self._depth_first_search_downwards(j, order, visited, dn_map, up_map);
+                self._depth_first_search_downwards(j, order, visited);
                 
         if len(order)!=len(provs):
             _log.error("something went wrong")
 
         return order
 
-    def _depth_first_search_upwards(self, j: int,
-				    order: list[int],
-				    visited: list[bool],
-				    dn_map: dict[int, list[int]],
-				    up_map: dict[int, list[int]]):
+    def _depth_first_search_upwards(self, j: int, order: List[int], visited: List[bool]):
         """depth_first_search_upwards"""
         
         k = j
         
-        inds = up_map.at(j)
+        inds = self.up_map[j]
         for ind in inds:
             if not visited[ind]:
-                return self._depth_first_search_upwards(ind, order, visited, dn_map, up_map)
+                return self._depth_first_search_upwards(ind, order, visited)
     
         return k
   
-    def _depth_first_search_downwards(self, j: int,
-				      order: list[int],
-				      visited: list[bool],
-				      dn_map: dict[int, list[int]],
-				      up_map: dict[int, list[int]]):
+    def _depth_first_search_downwards(self, j: int, order: List[int], visited: List[bool]):
         """depth_first_search_downwards"""
 
-        inds: list[int] = dn_map[j]
+        inds: List[int] = self.dn_map[j]
 
         for i in inds:
-            k:int = self._depth_first_search_upwards(i, order, visited, dn_map, up_map)
+            k:int = self._depth_first_search_upwards(i, order, visited)
 	
             if not visited[k]:
                 order.append(k)
                 visited[k] = True
 
-                self._depth_first_search_downwards(k, order, visited, dn_map, up_map)
+                self._depth_first_search_downwards(k, order, visited)
+
+
+    def _find_to_captions(self, page_elements: List[PageElement]):
+
+        captions: Set[int] = set()
+        footnotes: Set[int] = set()
+        
+        self.to_captions: Dict[int, List[int]] = {}
+        self.to_footnotes: Dict[int, List[int]] = {}
+
+        # Try find captions that precede the table and footnotes that come after the table
+        for ind, page_element in enumerate(page_elements):
+
+            if page_element.label==DocItemLabel.TABLE:
+
+                ind_j = ind-1
+                if ind_j>=0 and page_elements[ind_j].label==DocItemLabel.CAPTION:
+                    captions.add(ind_j)
+                    if ind in self.to_captions:
+                        self.to_captions[ind].append(ind_j)
+                    else:
+                        self.to_captions[ind] = [ind_j]
+
+                ind_j = ind + 1
+                while ind_j<len(page_elements) and page_elements[ind_j].label==DocItemLabel.FOOTNOTE:
+                    footnotes.add(ind_j)
+                    if ind in self.to_footnotes:
+                        self.to_footnotes[ind].append(ind_j)
+                    else:
+                        self.to_footnotes[ind] = [ind_j]
+
+                    ind_j += 1
+
+        # Try find captions that precede the table and footnotes that come after the table                    
+        for ind, page_element in enumerate(page_elements):
+            
+            if page_element.label==DocItemLabel.PICTURE:
+
+                ind_j = ind+1
+                if ind_j<len(page_elements) and page_elements[ind_j].label==DocItemLabel.CAPTION:
+                    captions.add(ind_j)
+                    if ind in self.to_captions:
+                        self.to_captions[ind].append(ind_j)
+                    else:
+                        self.to_captions[ind] = [ind_j]
+
+                ind_j = ind+1
+                while ind_j<len(page_elements) and page_elements[ind_j].label==DocItemLabel.FOOTNOTE:
+                    footnotes.add(ind_j)
+                    if ind in self.to_footnotes:
+                        self.to_footnotes[ind].append(ind_j)
+                    else:
+                        self.to_footnotes[ind] = [ind_j]                        
+
+                    ind_j += 1

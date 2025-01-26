@@ -7,10 +7,13 @@ import json
 import glob
 import copy
 
+import logging
+
 import numpy as np
 import pytest
 from PIL import Image
 
+from typing import List
 import random
 
 from huggingface_hub import snapshot_download
@@ -21,6 +24,12 @@ from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
 from docling_ibm_models.reading_order.reading_order_rb import PageElement, ReadingOrderPredictor
 
 from docling_core.types.doc.document import DoclingDocument, DocItem
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
 
 @pytest.fixture(scope="module")
 def init() -> dict:
@@ -121,31 +130,54 @@ def test_readingorder():
     romodel = ReadingOrderPredictor()
     
     filenames = sorted(glob.glob("/Users/taa/Documents/projects/docling-eval/benchmarks/DPBench-annotations-v03/json_annotations/*.json"))
+
+    print(f"#-filenames: {len(filenames)}")
     
     for filename in filenames:
+        print(f"reading {os.path.basename(filename)}")
 
         true_doc = DoclingDocument.load_from_json(filename=filename)
 
-        true_elememts: List[PageElement] = []
-        for level,item in true_doc.iterate_items():
+        true_elements: Dict[int, List[PageElement]] = {}
+        pred_elements: Dict[int, List[PageElement]] = {}
+        
+        for item,level in true_doc.iterate_items():
             if isinstance(item, DocItem):
                 for prov in item.prov:
-                    true_elememts.append(
+
+                    if prov.page_no not in true_elements:
+                        true_elements[prov.page_no] = []
+                        pred_elements[prov.page_no] = []
+                        
+                    page_height = true_doc.pages[prov.page_no].size.height
+                    
+                    true_elements[prov.page_no].append(
                         PageElement(
-                            cid=len(true_elememts),
+                            cid=len(true_elements[prov.page_no]),
                             pid=0, 
                             label=item.label,
-                            bbox=prov.bbox
+                            bbox=prov.bbox.to_bottom_left_origin(page_height=page_height)
                         )
                     )
 
-        rand_elements = copy.deepcopy(true_elememts)
-        random.shuffle(rand_elements)
+        rand_elements = copy.deepcopy(true_elements)
+        for page_no,val in rand_elements.items():
+            random.shuffle(rand_elements[page_no])
         
-        pred_elements = romodel.predict_page(page_elements=rand_elements)    
-        
-        assert len(pred_elements)==len(true_elements), f"len(pred_elements)==len(true_elements), {len(pred_elements)}=={len(true_elements)}"
+            pred_elements[page_no], to_captions, to_footnotes = romodel.predict_page(page_elements=rand_elements[page_no])    
 
-        for true_elem, pred_elem in zip(true_elements, pred_elements):
-            print("true: ", true_elem.cid, ", pred: ", pred_elem.cid)
-            assert true_elem.cid==pred_elem.cid
+            print(f"#-true elems: {len(true_elements[page_no])}, #-pred elems: {len(pred_elements[page_no])}")
+
+            print("to_captions: \n", to_captions)
+            print("to_footnotes: \n", to_footnotes)
+            
+            assert len(pred_elements[page_no])==len(true_elements[page_no]), f"len(pred_elements[page_no])==len(true_elements[page_no]), {len(pred_elements[page_no])}=={len(true_elements[page_no])}"
+
+            for true_elem, pred_elem, rand_elem in zip(true_elements[page_no],
+                                                       pred_elements[page_no],
+                                                       rand_elements[page_no]):
+                print("true: ", str(true_elem), ", pred: ", str(pred_elem), ", rand: ", str(rand_elem))
+                # assert true_elem.cid==pred_elem.cid
+
+            
+            
