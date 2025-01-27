@@ -141,10 +141,12 @@ def test_readingorder():
         true_elements: Dict[int, List[PageElement]] = {}
         pred_elements: Dict[int, List[PageElement]] = {}
         
-        for item,level in true_doc.iterate_items():
+        for item, level in true_doc.iterate_items():
             if isinstance(item, DocItem):
                 for prov in item.prov:
 
+                    print(f"\t{level}, {item.label}")
+                    
                     if prov.page_no not in true_elements:
                         true_elements[prov.page_no] = []
                         pred_elements[prov.page_no] = []
