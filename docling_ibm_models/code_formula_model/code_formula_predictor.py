@@ -181,11 +181,10 @@ class CodeFormulaPredictor:
             else:
                 raise TypeError("Not supported input image format")
             images_tmp.append(image)
-        images = images_tmp
 
-        images_tensor = torch.stack([self._image_processor(img) for img in images]).to(
-            self._device
-        )
+        images_tensor = torch.stack(
+            [self._image_processor(img) for img in images_tmp]
+        ).to(self._device)
 
         prompts = [self._get_prompt(label) for label in labels]
 

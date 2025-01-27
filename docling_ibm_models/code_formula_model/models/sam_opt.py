@@ -67,14 +67,14 @@ class SamOPTModel(OPTModel):
 
     def forward(
         self,
-        input_ids: torch.LongTensor = None,
+        input_ids: torch.LongTensor,
         attention_mask: Optional[torch.Tensor] = None,
         past_key_values: Optional[List[torch.FloatTensor]] = None,
         inputs_embeds: Optional[torch.FloatTensor] = None,
         use_cache: Optional[bool] = None,
         output_attentions: Optional[bool] = None,
         output_hidden_states: Optional[bool] = None,
-        images: torch.FloatTensor = None,
+        images: Optional[torch.FloatTensor] = None,
         return_dict: Optional[bool] = None,
     ) -> Union[Tuple, BaseModelOutputWithPast]:
 
@@ -86,6 +86,7 @@ class SamOPTModel(OPTModel):
 
         if input_ids.shape[1] != 1 or self.training:
             with torch.set_grad_enabled(self.training):
+                assert vision_tower is not None
                 image_features = vision_tower(images)
                 image_features = image_features.flatten(2).permute(0, 2, 1)
                 image_features = self.mm_projector(image_features)
@@ -115,13 +116,13 @@ class SamOPTModel(OPTModel):
 
                 new_input_embeds.append(cur_input_embeds)
 
-            inputs_embeds = torch.stack(new_input_embeds, dim=0)
+            next_inputs_embeds = torch.stack(new_input_embeds, dim=0)
 
         return super(SamOPTModel, self).forward(
             input_ids=None,
             attention_mask=attention_mask,
             past_key_values=past_key_values,
-            inputs_embeds=inputs_embeds,
+            inputs_embeds=next_inputs_embeds,
             use_cache=use_cache,
             output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,

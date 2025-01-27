@@ -5,6 +5,7 @@
 import os
 import platform
 import re
+from typing import Dict, Union
 
 
 class MemMonitor:
@@ -112,7 +113,7 @@ class MemMonitor:
             regex_str = r"({}:)(\s+)(\d*)(.*)".format(mem_field)
             self._status_regex[mem_field] = re.compile(regex_str)
 
-    def get_memory_full(self) -> dict:
+    def get_memory_full(self) -> Union[Dict, int]:
         r"""
         - Parse /proc/<pid>status to get all memory info.
         - The method returns a dict with the fields self._status_fields
@@ -140,7 +141,7 @@ class MemMonitor:
 
         return memory
 
-    def get_memory(self) -> dict:
+    def get_memory(self) -> Union[Dict, int]:
         r"""
         - Parse /proc/<pid>statm to get the most important memory fields
         - This is a fast implementation.
