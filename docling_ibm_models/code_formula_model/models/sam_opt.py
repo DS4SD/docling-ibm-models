@@ -116,13 +116,13 @@ class SamOPTModel(OPTModel):
 
                 new_input_embeds.append(cur_input_embeds)
 
-            next_inputs_embeds = torch.stack(new_input_embeds, dim=0)
+            inputs_embeds = torch.stack(new_input_embeds, dim=0)  # type: ignore
 
         return super(SamOPTModel, self).forward(
             input_ids=None,
             attention_mask=attention_mask,
             past_key_values=past_key_values,
-            inputs_embeds=next_inputs_embeds,
+            inputs_embeds=inputs_embeds,
             use_cache=use_cache,
             output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
