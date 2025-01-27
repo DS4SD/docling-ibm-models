@@ -95,9 +95,9 @@ class SamOPTModel(OPTModel):
             for cur_input_ids, cur_input_embeds, cur_image_features in zip(
                 input_ids, inputs_embeds, image_features
             ):
-                image_start_token_position = torch.where(
-                    cur_input_ids == im_start_token
-                )[0].item()
+                image_start_token_position = int(
+                    torch.where(cur_input_ids == im_start_token)[0].item()
+                )  # cast to int for mypy
 
                 cur_image_features = cur_image_features.to(
                     device=cur_input_embeds.device

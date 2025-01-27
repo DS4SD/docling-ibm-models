@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 #
 import logging
-from typing import List, Union
+from typing import List, Optional, Union
 
 import numpy as np
 import torch
@@ -132,7 +132,7 @@ class CodeFormulaPredictor:
         self,
         images: List[Union[Image.Image, np.ndarray]],
         labels: List[str],
-        temperature: float = 0.1,
+        temperature: Optional[float] = 0.1,
     ) -> List[str]:
         """
         Predicts the textual representation of input images (code or LaTeX).
@@ -143,7 +143,7 @@ class CodeFormulaPredictor:
             List of images to be processed, provided as PIL Image objects or numpy arrays.
         labels : List[str]
             List of labels indicating the type of each image ('code' or 'formula').
-        temperature : float, optional
+        temperature : Optional[float]
             Sampling temperature for generation, by default set to 0.1.
 
         Returns
@@ -159,7 +159,11 @@ class CodeFormulaPredictor:
         Excpetion
             In case the temperature is an invalid number.
         """
-        if (type(temperature) != float and type(temperature) != int) or temperature < 0:
+        if (
+            temperature is None
+            or (type(temperature) != float and type(temperature) != int)
+            or temperature < 0
+        ):
             raise Exception("Temperature must be a number greater or equal to 0.")
 
         do_sample = True
