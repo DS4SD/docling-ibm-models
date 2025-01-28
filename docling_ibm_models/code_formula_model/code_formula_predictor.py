@@ -161,7 +161,7 @@ class CodeFormulaPredictor:
         """
         if (
             temperature is None
-            or (type(temperature) != float and type(temperature) != int)
+            or not (isinstance(temperature, float) or isinstance(temperature, int))
             or temperature < 0
         ):
             raise Exception("Temperature must be a number greater or equal to 0.")
