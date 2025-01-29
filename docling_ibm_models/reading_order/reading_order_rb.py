@@ -17,7 +17,11 @@ class PageElement(BaseModel):
     eps: float = 1.0e-3
 
     cid: int
-    pid: int
+
+    page_no: int
+    
+    page_width: float
+    page_height: float 
 
     bbox: BoundingBox
 
@@ -27,14 +31,14 @@ class PageElement(BaseModel):
         return f"{self.cid:3.2f}\t{str(self.label):<10}\t{self.bbox.l:3.2f}, {self.bbox.b:3.2f}, {self.bbox.r:3.2f}, {self.bbox.t:3.2f}"
 
     def __lt__(self, other):
-        if self.pid == other.pid:
+        if self.page_no == other.page_no:
 
             if self.overlaps_x(other):
                 return self.bbox.b > other.bbox.b
             else:
                 return self.bbox.l < other.bbox.l
         else:
-            return self.pid < other.pid
+            return self.page_no < other.page_no
 
     def follows_maintext_order(self, rhs) -> bool:
         return self.cid + 1 == rhs.cid
@@ -69,7 +73,7 @@ class PageElement(BaseModel):
 
             iou_ = float(i1 - i0) / float(u1 - u0)
             return (iou_) > iou
-
+        
         return False
 
     def is_left_of(self, rhs: "PageElement") -> bool:
@@ -78,9 +82,14 @@ class PageElement(BaseModel):
     def is_strictly_left_of(self, rhs: "PageElement") -> bool:
         return (self.bbox.r + self.eps) < rhs.bbox.l
 
+    """"
     def is_above(self, rhs: "PageElement") -> bool:
         return self.bbox.b > rhs.bbox.b
+    """
 
+    def is_above(self, rhs: "PageElement") -> bool:
+        return self.bbox.t > rhs.bbox.t
+    
     def is_strictly_above(self, rhs: "PageElement") -> bool:
         return (self.bbox.b + self.eps) > rhs.bbox.t
 
@@ -120,12 +129,118 @@ class ReadingOrderPredictor:
         self.dn_map: Dict[int, List[int]] = {}
 
         self.heads: List[int] = []
+        
+    def predict_reading_order(
+        self, page_elements: List[PageElement]
+    ) -> List[PageElement]:
 
-        self.to_captions: Dict[int, List[int]] = {}
-        self.to_footnotes: Dict[int, List[int]] = {}
+        page_nos: Set[int] = set() 
 
+        for i, elem in enumerate(page_elements):
+            page_nos.add(elem.page_no)
+        
+        page_to_elems: Dict[int, List[PageElement]] = {}
+        page_to_headers: Dict[int, List[PageElement]] = {}
+        page_to_footers: Dict[int, List[PageElement]] = {}
+        
+        for page_no in page_nos:
+            page_to_elems[page_no] = []
+            page_to_footers[page_no] = []
+            page_to_headers[page_no] = []
+
+        for i, elem in enumerate(page_elements):            
+            if elem.label==DocItemLabel.PAGE_HEADER:
+                page_to_headers[page_no].append(elem)
+            elif elem.label==DocItemLabel.PAGE_FOOTER:
+                page_to_footers[page_no].append(elem)
+            else:            
+                page_to_elems[page_no].append(elem)
+
+        for page_no, elems in page_to_elems.items():            
+            page_to_elems[page_no] = predict_page(elems)
+            
+        for page_no, elems in page_to_headers.items():
+            page_to_headers[page_no] = predict_page(elems)
+            
+        for page_no, elems in page_to_footers.items():
+            page_to_footers[page_no] = predict_page(elems)
+
+        sorted_elements = []
+        for page_no in page_nos:
+            for k,v in page_to_headers[page_no].items():
+                sorted_elements.append(v)
+            for k,v in page_to_elems[page_no].items():
+                sorted_elements.append(v)                
+            for k,v in page_to_footers[page_no].items():
+                sorted_elements.append(v)
+
+        return sorted_elements
+
+    def predict_to_captions(self, sorted_elements: List[PageElement]) -> Dict[int, List[int]]:
+
+        to_captions: Dict[int, List[int]] = {}
+
+        page_nos: Set[int] = set() 
+        for i, elem in enumerate(sorted_elements):
+            page_nos.add(elem.page_no)
+
+        for page_no in page_nos:
+            page_to_elems[page_no] = []
+
+        for i, elem in enumerate(sorted_elements):            
+            page_to_elems[page_no].append(elem)
+
+        for page_no, elems in page_to_elems.items():            
+            self._find_to_captions(page_elements=page_to_elems[page_no])
+            for key,val in self.to_captions.items():
+                to_captions[key.cid] = [_.cid for _ in val]
+            
+        return to_captions
+
+    def predict_to_footnotes(self, sorted_elements: List[PageElement]) -> Dict[int, List[int]]:
+
+        to_footnotes: Dict[int, List[int]] = {}
+
+        page_nos: Set[int] = set() 
+        for i, elem in enumerate(sorted_elements):
+            page_nos.add(elem.page_no)
+
+        for page_no in page_nos:
+            page_to_elems[page_no] = []
+
+        for i, elem in enumerate(sorted_elements):            
+            page_to_elems[page_no].append(elem)
+
+        for page_no, elems in page_to_elems.items():            
+            self._find_to_footnotes(page_elements=page_to_elems[page_no])
+            for key,val in self.to_footnotes.items():
+                to_footnotes[key.cid] = [_.cid for _ in val]
+            
+        return to_footnotes    
+
+    def predict_to_merges(self, sorted_elements: List[PageElement]) -> Dict[int, List[int]]:
+
+        merges: Dict[int, List[int]] = {}
+
+        page_nos: Set[int] = set() 
+        for i, elem in enumerate(sorted_elements):
+            page_nos.add(elem.page_no)
+
+        for page_no in page_nos:
+            page_to_elems[page_no] = []
+
+        for i, elem in enumerate(sorted_elements):
+            if elem.label not in [DocItemLabel.PAGE_HEADER,
+                                  DocItemLabel.PAGE_FOOTER,
+                                  DocItemLabel.FOOTNOTE,
+                                  DocItemLabel.TABLE,
+                                  DocItemLabel.IMAGE]:
+                page_to_elems[page_no].append(elem)        
+
+        return merges
+                
     def predict_page(
-        self, page_elements: List[PageElement], page_height: float = 800.0
+        self, page_elements: List[PageElement]
     ) -> List[PageElement]:
         r"""
         Reorder the output of the
@@ -135,7 +250,7 @@ class ReadingOrderPredictor:
 
         for i, elem in enumerate(page_elements):
             page_elements[i].bbox = elem.bbox.to_bottom_left_origin(
-                page_height=page_height
+                page_height=elem.page_height
             )
 
         self._init_h2i_map(page_elements)
@@ -164,9 +279,9 @@ class ReadingOrderPredictor:
         for ind in order:
             sorted_page_elements.append(page_elements[ind])
 
-        self._find_to_captions(page_elements=sorted_page_elements)
-
-        return sorted_page_elements, self.to_captions, self.to_footnotes
+        #self._find_to_captions(page_elements=sorted_page_elements)
+        
+        return sorted_page_elements#, self.to_captions, self.to_footnotes
 
     def _init_h2i_map(self, page_elems: List[PageElement]):
         self.h2i_map = {}
@@ -360,13 +475,11 @@ class ReadingOrderPredictor:
 
                 self._depth_first_search_downwards(k, order, visited)
 
-    def _find_to_captions(self, page_elements: List[PageElement]):
-
+    def _find_to_captions(self, page_elements: List[PageElement]) -> Dict[int, List[int]]:
+        
         captions: Set[int] = set()
-        footnotes: Set[int] = set()
-
-        self.to_captions: Dict[int, List[int]] = {}
-        self.to_footnotes: Dict[int, List[int]] = {}
+        
+        to_captions: Dict[int, List[int]] = {}
 
         # Try find captions that precede the table and footnotes that come after the table
         for ind, page_element in enumerate(page_elements):
@@ -380,6 +493,34 @@ class ReadingOrderPredictor:
                         self.to_captions[ind].append(ind_j)
                     else:
                         self.to_captions[ind] = [ind_j]
+
+        # Try find captions that precede the table and footnotes that come after the table
+        for ind, page_element in enumerate(page_elements):
+
+            if page_element.label == DocItemLabel.PICTURE:
+
+                ind_j = ind + 1
+                if (
+                    ind_j < len(page_elements)
+                    and page_elements[ind_j].label == DocItemLabel.CAPTION
+                ):
+                    captions.add(ind_j)
+                    if ind in self.to_captions:
+                        self.to_captions[ind].append(ind_j)
+                    else:
+                        self.to_captions[ind] = [ind_j]
+
+
+    def _find_to_footnotes(self, page_elements: List[PageElement]) -> Dict[int, List[int]]:
+
+        footnotes: Set[int] = set()
+
+        to_footnotes: Dict[int, List[int]] = {}
+
+        # Try find captions that precede the table and footnotes that come after the table
+        for ind, page_element in enumerate(page_elements):
+
+            if page_element.label == DocItemLabel.TABLE:
 
                 ind_j = ind + 1
                 while (
@@ -400,17 +541,6 @@ class ReadingOrderPredictor:
             if page_element.label == DocItemLabel.PICTURE:
 
                 ind_j = ind + 1
-                if (
-                    ind_j < len(page_elements)
-                    and page_elements[ind_j].label == DocItemLabel.CAPTION
-                ):
-                    captions.add(ind_j)
-                    if ind in self.to_captions:
-                        self.to_captions[ind].append(ind_j)
-                    else:
-                        self.to_captions[ind] = [ind_j]
-
-                ind_j = ind + 1
                 while (
                     ind_j < len(page_elements)
                     and page_elements[ind_j].label == DocItemLabel.FOOTNOTE
@@ -422,3 +552,5 @@ class ReadingOrderPredictor:
                         self.to_footnotes[ind] = [ind_j]
 
                     ind_j += 1
+
+                    
