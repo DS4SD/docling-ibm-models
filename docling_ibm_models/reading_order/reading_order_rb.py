@@ -7,45 +7,56 @@ import os
 from collections.abc import Iterable
 from typing import Dict, List
 
-from docling_core.types.doc.base import BoundingBox
+import logging
+
+from docling_core.types.doc.base import Size, BoundingBox
 from docling_core.types.doc.labels import DocItemLabel
 from pydantic import BaseModel
 
 
-class PageElement(BaseModel):
+class PageElement(BoundingBox):
 
     eps: float = 1.0e-3
 
     cid: int
 
     page_no: int
-    
-    page_width: float
-    page_height: float 
-
-    bbox: BoundingBox
+    page_size: Size
 
     label: DocItemLabel
 
     def __str__(self):
-        return f"{self.cid:3.2f}\t{str(self.label):<10}\t{self.bbox.l:3.2f}, {self.bbox.b:3.2f}, {self.bbox.r:3.2f}, {self.bbox.t:3.2f}"
+        return f"{self.cid:6.2f}\t{str(self.label):<10}\t{self.l:6.2f}, {self.b:6.2f}, {self.r:6.2f}, {self.t:6.2f}"
 
     def __lt__(self, other):
         if self.page_no == other.page_no:
 
-            if self.overlaps_x(other):
-                return self.bbox.b > other.bbox.b
+            if self.overlaps_horizontally(other):
+                return self.b > other.b
             else:
-                return self.bbox.l < other.bbox.l
+                return self.l < other.l
         else:
             return self.page_no < other.page_no
 
     def follows_maintext_order(self, rhs) -> bool:
         return self.cid + 1 == rhs.cid
 
+    """
+    def overlaps(self, rhs: "PageElement") -> bool:
+        return self.bboxm .overlaps(other=rhs.bbox)
+    """
+    
+    """
     def overlaps(self, rhs: "PageElement") -> bool:
         return self.overlaps_x(rhs) and self.overlaps_y(rhs)
+    """
 
+    """
+    def overlaps_x(self, rhs: "PageElement") -> bool:
+        return self.bbox.overlaps_x(other=rhs.bbox)        
+    """
+    
+    """
     def overlaps_x(self, rhs: "PageElement") -> bool:
         return (
             (self.bbox.l <= rhs.bbox.l and rhs.bbox.l < self.bbox.r)
@@ -53,7 +64,14 @@ class PageElement(BaseModel):
             or (rhs.bbox.l <= self.bbox.l and self.bbox.l < rhs.bbox.r)
             or (rhs.bbox.l <= self.bbox.r and self.bbox.r < rhs.bbox.r)
         )
+    """
 
+    """
+    def overlaps_y(self, rhs: "PageElement") -> bool:
+        return self.bbox.overlaps_y(other=rhs.bbox)
+    """
+    
+    """
     def overlaps_y(self, rhs: "PageElement") -> bool:
         return (
             (self.bbox.b <= rhs.bbox.b and rhs.bbox.b < self.bbox.t)
@@ -61,7 +79,9 @@ class PageElement(BaseModel):
             or (rhs.bbox.b <= self.bbox.b and self.bbox.b < rhs.bbox.t)
             or (rhs.bbox.b <= self.bbox.t and self.bbox.t < rhs.bbox.t)
         )
-
+    """
+    
+    """
     def overlaps_y_with_iou(self, rhs: "PageElement", iou: float) -> bool:
         if self.overlaps_y(rhs):
 
@@ -75,24 +95,54 @@ class PageElement(BaseModel):
             return (iou_) > iou
         
         return False
+    """
 
+    """
+    def is_left_of(self, rhs: "PageElement") -> bool:
+        return self.bbox.is_left_of(rhs.bbox)
+    """
+    
+    """
     def is_left_of(self, rhs: "PageElement") -> bool:
         return self.bbox.l < rhs.bbox.l
+    """
 
+    """
+    def is_strictly_left_of(self, rhs: "PageElement") -> bool:
+        return self.bbox.is_strictly_left_of(rhs.bbox)
+    """
+    
+    """
     def is_strictly_left_of(self, rhs: "PageElement") -> bool:
         return (self.bbox.r + self.eps) < rhs.bbox.l
-
+    """
+    
     """"
     def is_above(self, rhs: "PageElement") -> bool:
         return self.bbox.b > rhs.bbox.b
     """
 
+    """
     def is_above(self, rhs: "PageElement") -> bool:
         return self.bbox.t > rhs.bbox.t
+    """
+
+    """
+    def is_above(self, rhs: "PageElement") -> bool:
+        self.bbox.above(other=rhs.bbox)
+    """
     
+    """
     def is_strictly_above(self, rhs: "PageElement") -> bool:
         return (self.bbox.b + self.eps) > rhs.bbox.t
+    """
 
+    """
+    def is_strictly_above(self, rhs: "PageElement") -> bool:
+        return self.bbox.is_strictly_above(other=rhs.bbox)
+    """
+    
+    """
     def is_horizontally_connected(
         self, elem_i: "PageElement", elem_j: "PageElement"
     ) -> bool:
@@ -106,8 +156,15 @@ class PageElement(BaseModel):
             return True
 
         return False
+    """
 
-
+    """
+    def is_horizontally_connected(
+        self, elem_i: "PageElement", elem_j: "PageElement"
+    ) -> bool:
+        return self.bbox.is_horizontally_connected(elem_i=elem_i, elem_j=elem_j)
+    """
+    
 class ReadingOrderPredictor:
     r"""
     Rule based reading order for DoclingDocument
@@ -156,24 +213,24 @@ class ReadingOrderPredictor:
             else:            
                 page_to_elems[page_no].append(elem)
 
-        for page_no, elems in page_to_elems.items():            
-            page_to_elems[page_no] = predict_page(elems)
-            
+        print("headers ....")
         for page_no, elems in page_to_headers.items():
-            page_to_headers[page_no] = predict_page(elems)
-            
-        for page_no, elems in page_to_footers.items():
-            page_to_footers[page_no] = predict_page(elems)
+            page_to_headers[page_no] = self.predict_page(elems)
+        
+        print("elems ....")
+        for page_no, elems in page_to_elems.items():            
+            page_to_elems[page_no] = self.predict_page(elems)
 
+        print("footers ....")            
+        for page_no, elems in page_to_footers.items():
+            page_to_footers[page_no] = self.predict_page(elems)
+            
         sorted_elements = []
         for page_no in page_nos:
-            for k,v in page_to_headers[page_no].items():
-                sorted_elements.append(v)
-            for k,v in page_to_elems[page_no].items():
-                sorted_elements.append(v)                
-            for k,v in page_to_footers[page_no].items():
-                sorted_elements.append(v)
-
+            sorted_elements.extend(page_to_headers[page_no])
+            sorted_elements.extend(page_to_elems[page_no])
+            sorted_elements.extend(page_to_footers[page_no])
+            
         return sorted_elements
 
     def predict_to_captions(self, sorted_elements: List[PageElement]) -> Dict[int, List[int]]:
@@ -249,10 +306,15 @@ class ReadingOrderPredictor:
         self.initialise()
 
         for i, elem in enumerate(page_elements):
-            page_elements[i].bbox = elem.bbox.to_bottom_left_origin(
-                page_height=elem.page_height
+            print(f"{i:6.2f}\t{str(elem)}")
+        
+        """
+        for i, elem in enumerate(page_elements):
+            page_elements[i] = elem.to_bottom_left_origin(
+                page_height=page_elements[i].page_size.height
             )
-
+        """
+        
         self._init_h2i_map(page_elements)
 
         self._init_l2r_map(page_elements)
@@ -273,15 +335,37 @@ class ReadingOrderPredictor:
         self._find_heads(page_elements)
 
         self._sort_ud_maps(page_elements)
+
+        print(f"heads: {self.heads}")
+
+        print("l2r: ")
+        for k,v in self.l2r_map.items():
+            print(f" -> {k}: {v}")
+
+        print("r2l: ")
+        for k,v in self.r2l_map.items():
+            print(f" -> {k}: {v}")
+
+        print("up: ")
+        for k,v in self.up_map.items():
+            print(f" -> {k}: {v}")
+
+        print("dn: ")
+        for k,v in self.dn_map.items():
+            print(f" -> {k}: {v}")            
+            
         order: List[int] = self._find_order(page_elements)
 
-        sorted_page_elements: List[PageElement] = []
-        for ind in order:
-            sorted_page_elements.append(page_elements[ind])
-
-        #self._find_to_captions(page_elements=sorted_page_elements)
+        print(f"order: {order}")
         
-        return sorted_page_elements#, self.to_captions, self.to_footnotes
+        sorted_elements: List[PageElement] = []
+        for ind in order:
+            sorted_elements.append(page_elements[ind])
+
+        for i, elem in enumerate(sorted_elements):
+            print(f"{i:6.2f}\t{str(elem)}")
+        
+        return sorted_elements
 
     def _init_h2i_map(self, page_elems: List[PageElement]):
         self.h2i_map = {}
@@ -299,9 +383,9 @@ class ReadingOrderPredictor:
             for j, pelem_j in enumerate(page_elems):
 
                 if (
-                    pelem_i.follows_maintext_order(pelem_j)
+                    False # pelem_i.follows_maintext_order(pelem_j)
                     and pelem_i.is_strictly_left_of(pelem_j)
-                    and pelem_i.overlaps_y_with_iou(pelem_j, 0.8)
+                    and pelem_i.overlaps_vertically_with_iou(pelem_j, 0.8)
                 ):
                     self.l2r_map[i] = j
                     self.r2l_map[j] = i
@@ -330,7 +414,7 @@ class ReadingOrderPredictor:
                     continue
 
                 is_horizontally_connected: bool = False
-                is_i_just_above_j: bool = pelem_i.overlaps_x(
+                is_i_just_above_j: bool = pelem_i.overlaps_horizontally(
                     pelem_j
                 ) and pelem_i.is_strictly_above(pelem_j)
 
@@ -343,7 +427,7 @@ class ReadingOrderPredictor:
 
                     # ensure there is no other element that is between i and j vertically
                     if is_i_just_above_j and (
-                        pelem_i.overlaps_x(pelem_w) or pelem_j.overlaps_x(pelem_w)
+                        pelem_i.overlaps_horizontally(pelem_w) or pelem_j.overlaps_horizontally(pelem_w)
                     ):
                         i_above_w: bool = pelem_i.is_strictly_above(pelem_w)
                         w_above_j: bool = pelem_w.is_strictly_above(pelem_j)
@@ -362,26 +446,26 @@ class ReadingOrderPredictor:
 
         for i, pelem_i in enumerate(dilated_page_elems):
 
-            x0 = pelem_i.bbox.l
-            y0 = pelem_i.bbox.b
+            x0 = pelem_i.l
+            y0 = pelem_i.b
 
-            x1 = pelem_i.bbox.r
-            y1 = pelem_i.bbox.t
+            x1 = pelem_i.r
+            y1 = pelem_i.t
 
             if i in self.up_map and len(self.up_map[i]) > 0:
                 pelem_up = page_elems[self.up_map[i][0]]
 
-                x0 = min(x0, pelem_up.bbox.l)
-                x1 = max(x1, pelem_up.bbox.r)
+                x0 = min(x0, pelem_up.l)
+                x1 = max(x1, pelem_up.r)
 
             if i in self.dn_map and len(self.dn_map[i]) > 0:
                 pelem_dn = page_elems[self.dn_map[i][0]]
 
-                x0 = min(x0, pelem_dn.bbox.l)
-                x1 = max(x1, pelem_dn.bbox.r)
+                x0 = min(x0, pelem_dn.l)
+                x1 = max(x1, pelem_dn.r)
 
-            pelem_i.bbox.l = x0
-            pelem_i.bbox.r = x1
+            pelem_i.l = x0
+            pelem_i.r = x1
 
             overlaps_with_rest: bool = False
             for j, pelem_j in enumerate(page_elems):
@@ -394,23 +478,30 @@ class ReadingOrderPredictor:
 
             # update
             if not overlaps_with_rest:
-                dilated_page_elems[i].bbox.l = x0
-                dilated_page_elems[i].bbox.b = y0
-                dilated_page_elems[i].bbox.r = x1
-                dilated_page_elems[i].bbox.t = y1
+                dilated_page_elems[i].l = x0
+                dilated_page_elems[i].b = y0
+                dilated_page_elems[i].r = x1
+                dilated_page_elems[i].t = y1
 
         return dilated_page_elems
 
     def _find_heads(self, page_elems: List[PageElement]):
-        # heads:List[int] = []
-
         head_page_elems = []
         for key, vals in self.up_map.items():
             if len(vals) == 0:
                 head_page_elems.append(page_elems[key])
 
-        sorted(head_page_elems)  # this will invokde __lt__ from PageElements
+        print("before sorting the heads: ")
+        for l, elem in enumerate(head_page_elems):
+            print(f"{l}\t{str(elem)}")
+                
+        head_page_elems = sorted(head_page_elems)  # this will invoke __lt__ from PageElements
 
+        print("after sorting the heads: ")
+        for l, elem in enumerate(head_page_elems):
+            print(f"{l}\t{str(elem)}")
+        
+        self.heads = []
         for item in head_page_elems:
             self.heads.append(self.h2i_map[item.cid])
 
@@ -441,7 +532,7 @@ class ReadingOrderPredictor:
                 self._depth_first_search_downwards(j, order, visited)
 
         if len(order) != len(provs):
-            _log.error("something went wrong")
+            logging.error("something went wrong")
 
         return order
 

@@ -519,13 +519,13 @@ files = [
 
 [[package]]
 name = "docling-core"
-version = "2.15.1"
+version = "2.16.0"
 description = "A python library to define and validate data types in Docling."
 optional = false
 python-versions = "<4.0,>=3.9"
 files = [
-    {file = "docling_core-2.15.1-py3-none-any.whl", hash = "sha256:33152604e1f14d5caccbef099c73163c3f211d0b4d92403d262c308633cc0451"},
-    {file = "docling_core-2.15.1.tar.gz", hash = "sha256:588d941b5bfc393a79e779ab64819c60763e7f182ec5221ee37da4be91dd802f"},
+    {file = "docling_core-2.16.0-py3-none-any.whl", hash = "sha256:3e159871c8421463a9323363020a88f452a97b129f8f3483263e3e3edca1fd59"},
+    {file = "docling_core-2.16.0.tar.gz", hash = "sha256:92f8a9f3495365e9af399854676f889c8645e77dc2bceff8f93bd37b8e53f364"},
 ]
 
 [package.dependencies]
@@ -4304,4 +4304,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "6b6c24e61d2ecbade07bafba3589bacbdbea053960e595c155cd2c866b3f3636"
+content-hash = "dceff004af1f9f32b1dbe26cfd73968bba60a42602ad61eab6b21747f80e18f8"

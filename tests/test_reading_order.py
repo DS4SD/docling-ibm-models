@@ -134,57 +134,47 @@ def test_readingorder():
     print(f"#-filenames: {len(filenames)}")
     
     for filename in filenames:
-        print(f"reading {os.path.basename(filename)}")
-
         true_doc = DoclingDocument.load_from_json(filename=filename)
 
-        true_elements: Dict[int, List[PageElement]] = {}
-        pred_elements: Dict[int, List[PageElement]] = {}
+        true_elements: List[PageElement] = []
+        pred_elements: List[PageElement] = []
         
         for item, level in true_doc.iterate_items():
             if isinstance(item, DocItem):
                 for prov in item.prov:
 
-                    print(f"\t{level}, {item.label}")
-                    
-                    if prov.page_no not in true_elements:
-                        true_elements[prov.page_no] = []
-                        pred_elements[prov.page_no] = []
-
                     page_height = true_doc.pages[prov.page_no].size.height
-                    page_width = true_doc.pages[prov.page_no].size.width
+                    bbox = prov.bbox.to_bottom_left_origin(page_height=page_height)
                     
-                    true_elements[prov.page_no].append(
+                    true_elements.append(
                         PageElement(
-                            cid=len(true_elements[prov.page_no]),
+                            cid=len(true_elements),
                             page_no=prov.page_no,
-                            page_height = page_height,
-                            page_width = page_width,                            
+                            page_size = true_doc.pages[prov.page_no].size,
                             label=item.label,
-                            bbox=prov.bbox.to_bottom_left_origin(page_height=page_height)
+                            l = bbox.l,
+                            r = bbox.r,
+                            b = bbox.b,
+                            t = bbox.t,
+                            coord_origin = bbox.coord_origin
                         )
                     )
 
         rand_elements = copy.deepcopy(true_elements)
-        for page_no,val in rand_elements.items():
-            random.shuffle(rand_elements[page_no])
+        random.shuffle(rand_elements)
+
+        print(f"reading {os.path.basename(filename)}")                
+        for true_elem, rand_elem in zip(true_elements, rand_elements):
+            print("true: ", str(true_elem), ", rand: ", str(rand_elem))
         
-            pred_elements[page_no] = romodel.predict_page(page_elements=rand_elements[page_no])    
+        pred_elements = romodel.predict_reading_order(page_elements=rand_elements)
+        #pred_elements = romodel.predict_page(page_elements=rand_elements)    
 
-            print(f"#-true elems: {len(true_elements[page_no])}, #-pred elems: {len(pred_elements[page_no])}")
+        assert len(pred_elements)==len(true_elements), f"{len(pred_elements)}!={len(true_elements)}"
 
-            #print("to_captions: \n", to_captions)
-            #print("to_footnotes: \n", to_footnotes)
-            
-            assert len(pred_elements[page_no])==len(true_elements[page_no]), f"len(pred_elements[page_no])==len(true_elements[page_no]), {len(pred_elements[page_no])}=={len(true_elements[page_no])}"
-
-            for true_elem, pred_elem, rand_elem in zip(true_elements[page_no],
-                                                       pred_elements[page_no],
-                                                       rand_elements[page_no]):
-                print("true: ", str(true_elem), ", pred: ", str(pred_elem), ", rand: ", str(rand_elem))
-                # assert true_elem.cid==pred_elem.cid
-
-        if "doc_e5cd36c1ca7a2c476b14a19497ea75921899a21c6b510f63ef571abf0c000d5b_page_000001.png.json" in filename:
-            exit(-1)
+        for true_elem, pred_elem, rand_elem in zip(true_elements,
+                                                   pred_elements,
+                                                   rand_elements):
+            print("true: ", str(true_elem), ", pred: ", str(pred_elem))
             
             
