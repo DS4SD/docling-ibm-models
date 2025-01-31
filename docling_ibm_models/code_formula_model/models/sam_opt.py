@@ -67,14 +67,14 @@ class SamOPTModel(OPTModel):
 
     def forward(
         self,
-        input_ids: torch.LongTensor = None,
+        input_ids: torch.LongTensor,
         attention_mask: Optional[torch.Tensor] = None,
         past_key_values: Optional[List[torch.FloatTensor]] = None,
         inputs_embeds: Optional[torch.FloatTensor] = None,
         use_cache: Optional[bool] = None,
         output_attentions: Optional[bool] = None,
         output_hidden_states: Optional[bool] = None,
-        images: torch.FloatTensor = None,
+        images: Optional[torch.FloatTensor] = None,
         return_dict: Optional[bool] = None,
     ) -> Union[Tuple, BaseModelOutputWithPast]:
 
@@ -86,6 +86,7 @@ class SamOPTModel(OPTModel):
 
         if input_ids.shape[1] != 1 or self.training:
             with torch.set_grad_enabled(self.training):
+                assert vision_tower is not None
                 image_features = vision_tower(images)
                 image_features = image_features.flatten(2).permute(0, 2, 1)
                 image_features = self.mm_projector(image_features)
@@ -94,9 +95,9 @@ class SamOPTModel(OPTModel):
             for cur_input_ids, cur_input_embeds, cur_image_features in zip(
                 input_ids, inputs_embeds, image_features
             ):
-                image_start_token_position = torch.where(
-                    cur_input_ids == im_start_token
-                )[0].item()
+                image_start_token_position = int(
+                    torch.where(cur_input_ids == im_start_token)[0].item()
+                )  # cast to int for mypy
 
                 cur_image_features = cur_image_features.to(
                     device=cur_input_embeds.device
@@ -115,7 +116,7 @@ class SamOPTModel(OPTModel):
 
                 new_input_embeds.append(cur_input_embeds)
 
-            inputs_embeds = torch.stack(new_input_embeds, dim=0)
+            inputs_embeds = torch.stack(new_input_embeds, dim=0)  # type: ignore
 
         return super(SamOPTModel, self).forward(
             input_ids=None,

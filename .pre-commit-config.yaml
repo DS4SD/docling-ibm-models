@@ -19,9 +19,9 @@ repos:
         entry: poetry lock --check
         pass_filenames: false
         language: system
-      # - id: system
-      #   name: MyPy
-      #   entry: poetry run mypy docling_ibm_models
-      #   pass_filenames: false
-      #   language: system
-      #   files: '\.py$'
+      - id: system
+        name: MyPy
+        entry: poetry run mypy docling_ibm_models
+        pass_filenames: false
+        language: system
+        files: '\.py$'

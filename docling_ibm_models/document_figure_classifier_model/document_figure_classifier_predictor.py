@@ -147,24 +147,23 @@ class DocumentFigureClassifierPredictor:
 
             The predictions for each image are sorted in descending order of confidence.
         """
-        processed_images = []
+        rgb_images = []
         for image in images:
             if isinstance(image, Image.Image):
-                processed_images.append(image.convert("RGB"))
+                rgb_images.append(image.convert("RGB"))
             elif isinstance(image, np.ndarray):
-                processed_images.append(Image.fromarray(image).convert("RGB"))
+                rgb_images.append(Image.fromarray(image).convert("RGB"))
             else:
                 raise TypeError(
                     "Supported input formats are PIL.Image.Image or numpy.ndarray."
                 )
-        images = processed_images
 
         # (batch_size, 3, 224, 224)
-        images = [self._image_processor(image) for image in images]
-        images = torch.stack(images).to(self._device)
+        processed_images = [self._image_processor(image) for image in rgb_images]
+        torch_images = torch.stack(processed_images).to(self._device)
 
         with torch.no_grad():
-            logits = self._model(images).logits  # (batch_size, num_classes)
+            logits = self._model(torch_images).logits  # (batch_size, num_classes)
             probs_batch = logits.softmax(dim=1)  # (batch_size, num_classes)
             probs_batch = probs_batch.cpu().numpy().tolist()
 
