@@ -28,4 +28,7 @@ class SamOptImageProcessor(ImageProcessingMixin):
         return image
 
 
-AutoImageProcessor.register(SamOptImageProcessor, SamOptImageProcessor)
+AutoImageProcessor.register(
+    config_class="SamOptImageProcessor",
+    slow_image_processor_class=SamOptImageProcessor,
+)
