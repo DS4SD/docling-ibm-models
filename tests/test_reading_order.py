@@ -124,6 +124,39 @@ def _test_readingorder(init: dict):
             print(ordered_elements)
 
 
+def rank_array(arr):
+    """Compute ranks, resolving ties by averaging."""
+    sorted_indices = sorted(range(len(arr)), key=lambda i: arr[i])  # Sort indices
+    ranks = [0] * len(arr)  # Initialize ranks
+    
+    i = 0
+    while i < len(arr):
+        start = i
+        while i + 1 < len(arr) and arr[sorted_indices[i]] == arr[sorted_indices[i + 1]]:
+            i += 1  # Handle ties
+        avg_rank = sum(range(start + 1, i + 2)) / (i - start + 1)  # Average rank for ties
+        for j in range(start, i + 1):
+            ranks[sorted_indices[j]] = avg_rank
+        i += 1
+    return ranks
+
+def spearman_rank_correlation(arr1, arr2):
+    assert len(arr1) == len(arr2), "Arrays must have the same length"
+    
+    # Compute ranks
+    rank1 = rank_array(arr1)
+    rank2 = rank_array(arr2)
+
+    # Compute rank differences and apply formula
+    d = [rank1[i] - rank2[i] for i in range(len(arr1))]
+    d_squared_sum = sum(d_i ** 2 for d_i in d)
+
+    n = len(arr1)
+    rho = 1 - (6 * d_squared_sum) / (n * (n**2 - 1))
+    
+    return rho
+
+            
 def test_readingorder():
 
     # Init the reading-order model
@@ -163,18 +196,24 @@ def test_readingorder():
         rand_elements = copy.deepcopy(true_elements)
         random.shuffle(rand_elements)
 
-        print(f"reading {os.path.basename(filename)}")                
+        """
+        print(f"reading {os.path.basename(filename)}")        
         for true_elem, rand_elem in zip(true_elements, rand_elements):
             print("true: ", str(true_elem), ", rand: ", str(rand_elem))
+        """
         
         pred_elements = romodel.predict_reading_order(page_elements=rand_elements)
         #pred_elements = romodel.predict_page(page_elements=rand_elements)    
 
         assert len(pred_elements)==len(true_elements), f"{len(pred_elements)}!={len(true_elements)}"
 
+        true_cids, pred_cids = [], []
         for true_elem, pred_elem, rand_elem in zip(true_elements,
                                                    pred_elements,
                                                    rand_elements):
-            print("true: ", str(true_elem), ", pred: ", str(pred_elem))
-            
+            true_cids.append(true_elem.cid)
+            pred_cids.append(pred_elem.cid)
+
+        score = spearman_rank_correlation(true_cids, pred_cids)
+        print(f"{os.path.basename(filename)}: {score}")                
             
