@@ -18,11 +18,6 @@ from datasets import load_dataset
 from typing import List
 import random
 
-from huggingface_hub import snapshot_download
-
-import docling_ibm_models.layoutmodel.layout_predictor as lp
-from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
-
 from docling_ibm_models.reading_order.reading_order_rb import PageElement, ReadingOrderPredictor
 
 from docling_core.types.doc.document import DoclingDocument, DocItem
