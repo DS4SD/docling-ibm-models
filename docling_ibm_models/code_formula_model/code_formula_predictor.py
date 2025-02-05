@@ -207,6 +207,7 @@ class CodeFormulaPredictor:
                 temperature=temperature,
                 max_new_tokens=4096 - prompt_ids.shape[1],
                 use_cache=True,
+                no_repeat_ngram_size=300,
             )
         else:
             with torch.autocast(device_type=self._device, dtype=torch.bfloat16):
@@ -217,6 +218,7 @@ class CodeFormulaPredictor:
                     temperature=temperature,
                     max_new_tokens=4096 - prompt_ids.shape[1],
                     use_cache=True,
+                    no_repeat_ngram_size=300,
                 )
 
         outputs = self._tokenizer.batch_decode(
