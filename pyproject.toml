@@ -56,6 +56,7 @@ types-requests = "^2.31.0.2"
 flake8-pyproject = "^1.2.3"
 pylint = "^2.17.5"
 ipykernel = "^6.29.5"
+datasets = "^3.2.0"
 
 [tool.poetry.group.mac_intel]
 optional = true

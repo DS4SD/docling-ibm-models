@@ -13,6 +13,8 @@ import numpy as np
 import pytest
 from PIL import Image
 
+from datasets import load_dataset
+
 from typing import List
 import random
 
@@ -161,14 +163,19 @@ def test_readingorder():
 
     # Init the reading-order model
     romodel = ReadingOrderPredictor()
-    
-    filenames = sorted(glob.glob("/Users/taa/Documents/projects/docling-eval/benchmarks/DPBench-annotations-v03/json_annotations/*.json"))
 
+    """
+    filenames = sorted(glob.glob("/Users/taa/Documents/projects/docling-eval/benchmarks/DPBench-annotations-v03/json_annotations/*.json"))
     print(f"#-filenames: {len(filenames)}")
     
     for filename in filenames:
         true_doc = DoclingDocument.load_from_json(filename=filename)
+    """
 
+    ds = load_dataset("ds4sd/docling-dpbench")
+    for row in ds["test"]:
+        true_doc = DoclingDocument.model_validate_json(row["GroundTruthDocument"])
+        
         true_elements: List[PageElement] = []
         pred_elements: List[PageElement] = []
         
@@ -215,5 +222,8 @@ def test_readingorder():
             pred_cids.append(pred_elem.cid)
 
         score = spearman_rank_correlation(true_cids, pred_cids)
-        print(f"{os.path.basename(filename)}: {score}")                
+
+        filename = row["document_id"]
+        print(f"{os.path.basename(filename)}: {score}")
+        
             
