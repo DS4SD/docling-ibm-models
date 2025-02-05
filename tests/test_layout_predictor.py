@@ -92,10 +92,12 @@ def test_layoutpredictor(init: dict):
                 with open(true_layout_fn, "r") as fr:
                     true_layout = json.load(fr)
 
+            """
                 # FIXME: write a simple test to check all objects are found
             else:
                 with open(true_layout_fn, "w") as fw:
                     fw.write(json.dumps(pred_layout, indent=4))
+            """
             
             # Load images as numpy arrays
             np_arr = np.asarray(img)
