@@ -20,7 +20,7 @@ import random
 
 from docling_ibm_models.reading_order.reading_order_rb import PageElement, ReadingOrderPredictor
 
-from docling_core.types.doc.document import DoclingDocument, DocItem
+from docling_core.types.doc.document import DoclingDocument, DocItem, RefItem, TextItem
 
 # Configure logging
 logging.basicConfig(
@@ -61,6 +61,8 @@ def spearman_rank_correlation(arr1, arr2):
             
 def test_readingorder():
 
+    ro_scores, caption_scores, footnote_scores = [], [], []
+    
     # Init the reading-order model
     romodel = ReadingOrderPredictor()
 
@@ -70,6 +72,9 @@ def test_readingorder():
         
         true_elements: List[PageElement] = []
         pred_elements: List[PageElement] = []
+
+        to_ref: Dict[int, str] = {}
+        from_ref: Dict[str, int] = {}
         
         for item, level in true_doc.iterate_items():
             if isinstance(item, DocItem):
@@ -77,10 +82,16 @@ def test_readingorder():
 
                     page_height = true_doc.pages[prov.page_no].size.height
                     bbox = prov.bbox.to_bottom_left_origin(page_height=page_height)
+
+                    text = ""
+                    if isinstance(item, TextItem):
+                        text = item.text
                     
                     true_elements.append(
                         PageElement(
                             cid=len(true_elements),
+                            ref=item.get_ref(),
+                            text = text,
                             page_no=prov.page_no,
                             page_size = true_doc.pages[prov.page_no].size,
                             label=item.label,
@@ -92,6 +103,9 @@ def test_readingorder():
                         )
                     )
 
+                    to_ref[true_elements[-1].cid] = item.get_ref().cref 
+                    from_ref[item.get_ref().cref] = true_elements[-1].cid 
+                    
         rand_elements = copy.deepcopy(true_elements)
         random.shuffle(rand_elements)
 
@@ -114,7 +128,8 @@ def test_readingorder():
             pred_cids.append(pred_elem.cid)
 
         score = spearman_rank_correlation(true_cids, pred_cids)
-
+        ro_scores.append(score)
+        
         filename = row["document_id"]
 
         # Identify special cases ...
@@ -128,4 +143,105 @@ def test_readingorder():
             assert score>=0.60, f"reading-order score={score}>0.60"            
         else:
             assert score>=0.90, f"reading-order score={score}>0.90"
+
+
+        true_to_captions: Dict[int, List[int]] = {}
+        true_to_footnotes: Dict[int, List[int]] = {}
+
+        total_caption_links = 0
+        total_footnote_links = 0
+        
+        for table in true_doc.tables:
+            table_cid = from_ref[table.get_ref().cref]
+
+            true_to_captions[table_cid] = []  
+            for caption in table.captions:
+                caption_cid = from_ref[caption.get_ref().cref]
+                true_to_captions[table_cid].append(caption_cid) 
+
+                total_caption_links += 1
+
+            true_to_footnotes[table_cid] = []  
+            for footnote in table.footnotes:
+                footnote_cid = from_ref[footnote.get_ref().cref]
+                true_to_footnotes[table_cid].append(footnote_cid) 
+
+                total_footnote_links += 1
+                
+        for picture in true_doc.pictures:
+            picture_cid = from_ref[picture.get_ref().cref]
+
+            true_to_captions[picture_cid] = []  
+            for caption in picture.captions:
+                caption_cid = from_ref[caption.get_ref().cref]
+                true_to_captions[picture_cid].append(caption_cid)                 
+
+                total_caption_links += 1
+
+            true_to_footnotes[picture_cid] = []  
+            for footnote in picture.footnotes:
+                footnote_cid = from_ref[footnote.get_ref().cref]
+                true_to_footnotes[picture_cid].append(footnote_cid)                 
+
+                total_footnote_links += 1
+                
+        if total_caption_links>0:
+            #print(" *********** ")
             
+            pred_to_captions = romodel.predict_to_captions(sorted_elements=pred_elements)
+
+            """
+            for key,val in pred_to_captions.items():
+                print(f"pred {key}: {val}")
+            """
+            
+            score, total = 0.0, 0.0
+            for key,val in true_to_captions.items():
+                # print(f"true {key}: {val}")            
+                
+                total += 1.0
+                if key in pred_to_captions and pred_to_captions[key]==val:
+                    score += 1.0
+
+            # print(f"to_captions: {score/total}")
+            caption_scores.append(score/total)
+
+        if total_footnote_links>0:
+            # print(" *********** ")
+            
+            pred_to_footnotes = romodel.predict_to_footnotes(sorted_elements=pred_elements)
+
+            """
+            for key,val in pred_to_footnotes.items():
+                print(f"pred {key}: {val}")
+            """
+            
+            score, total = 0.0, 0.0
+            for key,val in true_to_footnotes.items():
+                # print(f"true {key}: {val}")            
+                
+                total += 1.0
+                if key in pred_to_footnotes and pred_to_footnotes[key]==val:
+                    score += 1.0
+
+            # print(f"to_footnotes: {score/total}")
+            footnote_scores.append(score/total)
+
+        pred_merges = romodel.predict_merges(sorted_elements=pred_elements)
+        # print("merges: ", pred_merges)
+                    
+                    
+    mean_ro_score = sum(ro_scores)/len(ro_scores)
+    mean_cp_score = sum(caption_scores)/len(caption_scores)
+    mean_ft_score = sum(footnote_scores)/len(footnote_scores)
+
+    assert mean_ro_score>0.95, "mean_ro_score>0.95"
+    assert mean_cp_score>0.85, "mean_cp_score>0.85"
+    assert mean_ft_score>0.90, "mean_ft_score>0.90"
+    
+    print("\n  score(reading): ", mean_ro_score)
+    print("  score(caption): ", mean_cp_score)
+    print("score(footnotes): ", mean_ft_score)
+
+
+    

@@ -4,11 +4,15 @@
 #
 import copy
 import logging
+
 import os
+import re
+
 from collections.abc import Iterable
 from typing import Dict, List
 
 from docling_core.types.doc.base import BoundingBox, Size
+from docling_core.types.doc.document import RefItem
 from docling_core.types.doc.labels import DocItemLabel
 from pydantic import BaseModel
 
@@ -18,7 +22,10 @@ class PageElement(BoundingBox):
     eps: float = 1.0e-3
 
     cid: int
+    ref: RefItem = RefItem(cref="#")
 
+    text: str = ""
+    
     page_no: int
     page_size: Size
 
@@ -119,6 +126,7 @@ class ReadingOrderPredictor:
         for i, elem in enumerate(sorted_elements):
             page_nos.add(elem.page_no)
 
+        page_to_elems: Dict[int, List[int]] = {}
         for page_no in page_nos:
             page_to_elems[page_no] = []
 
@@ -126,9 +134,11 @@ class ReadingOrderPredictor:
             page_to_elems[page_no].append(elem)
 
         for page_no, elems in page_to_elems.items():
-            self._find_to_captions(page_elements=page_to_elems[page_no])
-            for key, val in self.to_captions.items():
-                to_captions[key.cid] = [_.cid for _ in val]
+            page_to_captions = self._find_to_captions(
+                page_elements=page_to_elems[page_no]
+            )
+            for key, val in page_to_captions.items():
+                to_captions[key] = val
 
         return to_captions
 
@@ -142,6 +152,7 @@ class ReadingOrderPredictor:
         for i, elem in enumerate(sorted_elements):
             page_nos.add(elem.page_no)
 
+        page_to_elems: Dict[int, List[int]] = {}
         for page_no in page_nos:
             page_to_elems[page_no] = []
 
@@ -149,34 +160,49 @@ class ReadingOrderPredictor:
             page_to_elems[page_no].append(elem)
 
         for page_no, elems in page_to_elems.items():
-            self._find_to_footnotes(page_elements=page_to_elems[page_no])
-            for key, val in self.to_footnotes.items():
-                to_footnotes[key.cid] = [_.cid for _ in val]
+            page_to_footnotes = self._find_to_footnotes(page_elements=page_to_elems[page_no])
+            for key, val in page_to_footnotes.items():
+                to_footnotes[key] = val
 
         return to_footnotes
 
-    def predict_to_merges(
+    def predict_merges(
         self, sorted_elements: List[PageElement]
     ) -> Dict[int, List[int]]:
 
         merges: Dict[int, List[int]] = {}
 
-        page_nos: Set[int] = set()
-        for i, elem in enumerate(sorted_elements):
-            page_nos.add(elem.page_no)
+        curr_ind = -1
+        for ind, elem in enumerate(sorted_elements):
 
-        for page_no in page_nos:
-            page_to_elems[page_no] = []
+            if ind<=curr_ind:
+                continue
+            
+            if elem.label in [DocItemLabel.TEXT]:
 
-        for i, elem in enumerate(sorted_elements):
-            if elem.label not in [
-                DocItemLabel.PAGE_HEADER,
-                DocItemLabel.PAGE_FOOTER,
-                DocItemLabel.FOOTNOTE,
-                DocItemLabel.TABLE,
-                DocItemLabel.IMAGE,
-            ]:
-                page_to_elems[page_no].append(elem)
+                ind_p1 = ind+1
+                while ind_p1<len(sorted_elements) and \
+                      sorted_elements[ind_p1] in [
+                          DocItemLabel.PAGE_HEADER,
+                          DocItemLabel.PAGE_FOOTER,
+                          DocItemLabel.TABLE,
+                          DocItemLabel.PICTURE,
+                          DocItemLabel.CAPTION,
+                          DocItemLabel.FOOTNOTE,                          
+                      ]:
+                    ind_p1 += 1
+
+                if ind_p1<len(sorted_elements) and \
+                   sorted_elements[ind_p1].label == elem.label and \
+                   (elem.page_no != sorted_elements[ind_p1].label or
+                    elem.is_strictly_left_of(sorted_elements[ind_p1])):
+
+                    m1 = re.fullmatch(".+([a-z\,\-])(\s*)", elem.text)
+                    m2 = re.fullmatch("(\s*[a-z])(.+)", sorted_elements[ind_p1].text)
+                    
+                    if m1 and m2:
+                        merges[elem.cid] = [sorted_elements[ind_p1].cid]
+                        curr_ind = ind_p1
 
         return merges
 
@@ -474,7 +500,7 @@ class ReadingOrderPredictor:
         # init from_captions
         for ind, page_element in enumerate(page_elements):
             if page_element.label == DocItemLabel.CAPTION:
-                from_captions[page_element.cid] = []
+                from_captions[page_element.cid] = ([], [])
 
         for ind, page_element in enumerate(page_elements):
             if page_element.label == DocItemLabel.CAPTION:
@@ -483,7 +509,7 @@ class ReadingOrderPredictor:
                     DocItemLabel.TABLE,
                     DocItemLabel.PICTURE,
                 ]:
-                    from_captions[page_element.cid][0].append(ind_m1)
+                    from_captions[page_element.cid][0].append(page_elements[ind_m1].cid)
                     ind_m1 = ind_m1 - 1
 
                 ind_p1 = ind + 1
@@ -491,24 +517,23 @@ class ReadingOrderPredictor:
                     DocItemLabel.TABLE,
                     DocItemLabel.PICTURE,
                 ]:
-                    from_captions[page_element.cid][1].append(ind_p1)
+                    from_captions[page_element.cid][1].append(page_elements[ind_p1].cid)
                     ind_p1 = ind_p1 + 1
+
+        """
+        for cid_i, to_item in from_captions.items():
+            print("from-captions: ", cid_i, ": ", to_item[0], "; ", to_item[1])
+        """
 
         assigned_cids = set()
         for cid_i, to_item in from_captions.items():
-            if (
-                len(from_captions[page_element.cid_i][0]) == 0
-                and len(from_captions[page_element.cid_i][1]) > 0
-            ):
-                for cid_j in from_captions[page_element.cid_i][1]:
+            if len(from_captions[cid_i][0]) == 0 and len(from_captions[cid_i][1]) > 0:
+                for cid_j in from_captions[cid_i][1]:
                     to_captions[cid_j] = [cid_i]
                     assigned_cids.add(cid_j)
 
-            if (
-                len(from_captions[page_element.cid_i][0]) > 0
-                and len(from_captions[page_element.cid_i][1]) == 0
-            ):
-                for cid_j in from_captions[page_element.cid_i][1]:
+            if len(from_captions[cid_i][0]) > 0 and len(from_captions[cid_i][1]) == 0:
+                for cid_j in from_captions[cid_i][0]:
                     to_captions[cid_j] = [cid_i]
                     assigned_cids.add(cid_j)
 
@@ -522,21 +547,20 @@ class ReadingOrderPredictor:
                     from_captions[cid_i][1].remove(cid_j)
 
         for cid_i, to_item in from_captions.items():
-            if (
-                len(from_captions[page_element.cid_i][0]) == 0
-                and len(from_captions[page_element.cid_i][1]) > 0
-            ):
-                for cid_j in from_captions[page_element.cid_i][1]:
+            if len(from_captions[cid_i][0]) == 0 and len(from_captions[cid_i][1]) > 0:
+                for cid_j in from_captions[cid_i][1]:
                     to_captions[cid_j] = [cid_i]
                     assigned_cids.add(cid_j)
 
-            if (
-                len(from_captions[page_element.cid_i][0]) > 0
-                and len(from_captions[page_element.cid_i][1]) == 0
-            ):
-                for cid_j in from_captions[page_element.cid_i][1]:
+            if len(from_captions[cid_i][0]) > 0 and len(from_captions[cid_i][1]) == 0:
+                for cid_j in from_captions[cid_i][0]:
                     to_captions[cid_j] = [cid_i]
                     assigned_cids.add(cid_j)
+
+        """
+        for cid_i, to_item in to_captions.items():
+            print("to-captions: ", cid_i, ": ", to_item)
+        """
 
         return to_captions
 
@@ -544,42 +568,23 @@ class ReadingOrderPredictor:
         self, page_elements: List[PageElement]
     ) -> Dict[int, List[int]]:
 
-        footnotes: Set[int] = set()
-
         to_footnotes: Dict[int, List[int]] = {}
 
         # Try find captions that precede the table and footnotes that come after the table
         for ind, page_element in enumerate(page_elements):
 
-            if page_element.label == DocItemLabel.TABLE:
+            if page_element.label in [DocItemLabel.TABLE, DocItemLabel.PICTURE]:
 
-                ind_j = ind + 1
+                ind_p1 = ind + 1
                 while (
-                    ind_j < len(page_elements)
-                    and page_elements[ind_j].label == DocItemLabel.FOOTNOTE
+                    ind_p1 < len(page_elements)
+                    and page_elements[ind_p1].label == DocItemLabel.FOOTNOTE
                 ):
-                    footnotes.add(ind_j)
-                    if ind in self.to_footnotes:
-                        self.to_footnotes[ind].append(ind_j)
+                    if page_element.cid in to_footnotes:
+                        to_footnotes[page_element.cid].append(page_elements[ind_p1].cid)
                     else:
-                        self.to_footnotes[ind] = [ind_j]
+                        to_footnotes[page_element.cid] = [page_elements[ind_p1].cid]
 
-                    ind_j += 1
+                    ind_p1 += 1
 
-        # Try find captions that precede the table and footnotes that come after the table
-        for ind, page_element in enumerate(page_elements):
-
-            if page_element.label == DocItemLabel.PICTURE:
-
-                ind_j = ind + 1
-                while (
-                    ind_j < len(page_elements)
-                    and page_elements[ind_j].label == DocItemLabel.FOOTNOTE
-                ):
-                    footnotes.add(ind_j)
-                    if ind in self.to_footnotes:
-                        self.to_footnotes[ind].append(ind_j)
-                    else:
-                        self.to_footnotes[ind] = [ind_j]
-
-                    ind_j += 1
+        return to_footnotes
