@@ -4,10 +4,8 @@
 #
 import copy
 import logging
-
 import os
 import re
-
 from collections.abc import Iterable
 from typing import Dict, List
 
@@ -25,7 +23,7 @@ class PageElement(BoundingBox):
     ref: RefItem = RefItem(cref="#")
 
     text: str = ""
-    
+
     page_no: int
     page_size: Size
 
@@ -160,7 +158,9 @@ class ReadingOrderPredictor:
             page_to_elems[page_no].append(elem)
 
         for page_no, elems in page_to_elems.items():
-            page_to_footnotes = self._find_to_footnotes(page_elements=page_to_elems[page_no])
+            page_to_footnotes = self._find_to_footnotes(
+                page_elements=page_to_elems[page_no]
+            )
             for key, val in page_to_footnotes.items():
                 to_footnotes[key] = val
 
@@ -175,31 +175,34 @@ class ReadingOrderPredictor:
         curr_ind = -1
         for ind, elem in enumerate(sorted_elements):
 
-            if ind<=curr_ind:
+            if ind <= curr_ind:
                 continue
-            
+
             if elem.label in [DocItemLabel.TEXT]:
 
-                ind_p1 = ind+1
-                while ind_p1<len(sorted_elements) and \
-                      sorted_elements[ind_p1] in [
-                          DocItemLabel.PAGE_HEADER,
-                          DocItemLabel.PAGE_FOOTER,
-                          DocItemLabel.TABLE,
-                          DocItemLabel.PICTURE,
-                          DocItemLabel.CAPTION,
-                          DocItemLabel.FOOTNOTE,                          
-                      ]:
+                ind_p1 = ind + 1
+                while ind_p1 < len(sorted_elements) and sorted_elements[ind_p1] in [
+                    DocItemLabel.PAGE_HEADER,
+                    DocItemLabel.PAGE_FOOTER,
+                    DocItemLabel.TABLE,
+                    DocItemLabel.PICTURE,
+                    DocItemLabel.CAPTION,
+                    DocItemLabel.FOOTNOTE,
+                ]:
                     ind_p1 += 1
 
-                if ind_p1<len(sorted_elements) and \
-                   sorted_elements[ind_p1].label == elem.label and \
-                   (elem.page_no != sorted_elements[ind_p1].label or
-                    elem.is_strictly_left_of(sorted_elements[ind_p1])):
+                if (
+                    ind_p1 < len(sorted_elements)
+                    and sorted_elements[ind_p1].label == elem.label
+                    and (
+                        elem.page_no != sorted_elements[ind_p1].label
+                        or elem.is_strictly_left_of(sorted_elements[ind_p1])
+                    )
+                ):
 
                     m1 = re.fullmatch(".+([a-z\,\-])(\s*)", elem.text)
                     m2 = re.fullmatch("(\s*[a-z])(.+)", sorted_elements[ind_p1].text)
-                    
+
                     if m1 and m2:
                         merges[elem.cid] = [sorted_elements[ind_p1].cid]
                         curr_ind = ind_p1
