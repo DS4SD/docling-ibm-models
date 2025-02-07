@@ -76,7 +76,7 @@ class ReadingOrderPredictor:
 
         for i, elem in enumerate(page_elements):
             page_nos.add(elem.page_no)
-
+            
         page_to_elems: Dict[int, List[PageElement]] = {}
         page_to_headers: Dict[int, List[PageElement]] = {}
         page_to_footers: Dict[int, List[PageElement]] = {}
@@ -88,11 +88,11 @@ class ReadingOrderPredictor:
 
         for i, elem in enumerate(page_elements):
             if elem.label == DocItemLabel.PAGE_HEADER:
-                page_to_headers[page_no].append(elem)
+                page_to_headers[elem.page_no].append(elem)
             elif elem.label == DocItemLabel.PAGE_FOOTER:
-                page_to_footers[page_no].append(elem)
+                page_to_footers[elem.page_no].append(elem)
             else:
-                page_to_elems[page_no].append(elem)
+                page_to_elems[elem.page_no].append(elem)
 
         # print("headers ....")
         for page_no, elems in page_to_headers.items():

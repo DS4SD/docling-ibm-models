@@ -9,6 +9,8 @@ import copy
 
 import logging
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 from PIL import Image
@@ -244,4 +246,23 @@ def test_readingorder():
     print("score(footnotes): ", mean_ft_score)
 
 
+"""    
+def test_readingorder_multipage():
+
+    filename = Path("<json with page-elements>")
+    
+    # Init the reading-order model
+    romodel = ReadingOrderPredictor()
+
+    true_elements: List[PageElement] = []
+    pred_elements: List[PageElement] = []
+    
+    with open(filename, "r") as fr:
+        data = json.load(fr)
+        true_elements = [PageElement.model_validate(item) for item in data]
+
+    pred_elements = romodel.predict_reading_order(page_elements=true_elements)
+    for true_elem, pred_elem in zip(true_elements, pred_elements):
+        print("true: ", str(true_elem), ", pred: ", str(pred_elem))
+"""
     
