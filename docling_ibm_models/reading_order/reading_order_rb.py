@@ -129,9 +129,10 @@ class ReadingOrderPredictor:
             page_to_elems[page_no] = []
 
         for i, elem in enumerate(sorted_elements):
-            page_to_elems[page_no].append(elem)
+            page_to_elems[elem.page_no].append(elem)
 
         for page_no, elems in page_to_elems.items():
+
             page_to_captions = self._find_to_captions(
                 page_elements=page_to_elems[page_no]
             )
@@ -155,7 +156,7 @@ class ReadingOrderPredictor:
             page_to_elems[page_no] = []
 
         for i, elem in enumerate(sorted_elements):
-            page_to_elems[page_no].append(elem)
+            page_to_elems[elem.page_no].append(elem)
 
         for page_no, elems in page_to_elems.items():
             page_to_footnotes = self._find_to_footnotes(
@@ -532,22 +533,46 @@ class ReadingOrderPredictor:
         for cid_i, to_item in from_captions.items():
             if len(from_captions[cid_i][0]) == 0 and len(from_captions[cid_i][1]) > 0:
                 for cid_j in from_captions[cid_i][1]:
-                    to_captions[cid_j] = [cid_i]
+                    # To avoid overwriting that to_captions[cid_j] when they exist
+                    if to_captions.get(cid_j) is None:
+                        to_captions[cid_j] = [cid_i]
+                    elif cid_i not in to_captions[cid_j]:
+                        to_captions[cid_j].append(cid_i)
+                    #to_captions[cid_j] = [cid_i]
+
                     assigned_cids.add(cid_j)
 
             if len(from_captions[cid_i][0]) > 0 and len(from_captions[cid_i][1]) == 0:
                 for cid_j in from_captions[cid_i][0]:
-                    to_captions[cid_j] = [cid_i]
+                    # To avoid overwriting that to_captions[cid_j] when they exist
+                    if to_captions.get(cid_j) is None:
+                        to_captions[cid_j] = [cid_i]
+                    elif cid_i not in to_captions[cid_j]:
+                        to_captions[cid_j].append(cid_i)
+                    #to_captions[cid_j] = [cid_i]
                     assigned_cids.add(cid_j)
 
+
+
         for cid_i, to_item in from_captions.items():
+            # To avoid changing the size of from_captions[cid_i][0] while iterating...
+            preceding_to_remove = set()
+            following_to_remove = set()
+
             for cid_j in from_captions[cid_i][0]:
                 if cid_j in assigned_cids:
-                    from_captions[cid_i][0].remove(cid_j)
+                    preceding_to_remove.add(cid_j)
+                    #from_captions[cid_i][0].remove(cid_j)
 
             for cid_j in from_captions[cid_i][1]:
                 if cid_j in assigned_cids:
-                    from_captions[cid_i][1].remove(cid_j)
+                    following_to_remove.add(cid_j)
+                    #from_captions[cid_i][1].remove(cid_j)
+
+            for num in preceding_to_remove:
+                from_captions[cid_i][0].remove(num)
+            for num in following_to_remove:
+                from_captions[cid_i][1].remove(num)
 
         for cid_i, to_item in from_captions.items():
             if len(from_captions[cid_i][0]) == 0 and len(from_captions[cid_i][1]) > 0:
@@ -565,6 +590,17 @@ class ReadingOrderPredictor:
             print("to-captions: ", cid_i, ": ", to_item)
         """
 
+        def _remove_overlapping_indexes(mapping):
+            used = set()
+            result = {}
+            for key, values in sorted(mapping.items()):
+                valid = [v for v in sorted(values, key=lambda v: abs(v - key)) if v not in used]
+                if valid:
+                    result[key] = [valid[0]]
+                    used.add(valid[0])
+            return result
+
+        to_captions = _remove_overlapping_indexes(to_captions)
         return to_captions
 
     def _find_to_footnotes(
