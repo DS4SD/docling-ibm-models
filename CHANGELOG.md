@@ -1,3 +1,9 @@
+## [v3.3.2](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.3.2) - 2025-02-13
+
+### Fix
+
+* Update Pillow constraints ([#80](https://github.com/DS4SD/docling-ibm-models/issues/80)) ([`4fa1828`](https://github.com/DS4SD/docling-ibm-models/commit/4fa18280b0f9e56af15fac77be98af7be7cec3b3))
+
 ## [v3.3.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.3.1) - 2025-02-06
 
 ### Fix
