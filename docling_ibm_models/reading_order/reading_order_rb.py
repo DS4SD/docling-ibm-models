@@ -7,7 +7,7 @@ import logging
 import os
 import re
 from collections.abc import Iterable
-from typing import Dict, List
+from typing import Dict, List, Set, Tuple
 
 from docling_core.types.doc.base import BoundingBox, Size
 from docling_core.types.doc.document import RefItem
@@ -20,7 +20,7 @@ class PageElement(BoundingBox):
     eps: float = 1.0e-3
 
     cid: int
-    ref: RefItem = RefItem(cref="#")
+    ref: RefItem = RefItem(cref="#")  # type: ignore
 
     text: str = ""
 
@@ -60,8 +60,8 @@ class ReadingOrderPredictor:
         self.h2i_map: Dict[int, int] = {}
         self.i2h_map: Dict[int, int] = {}
 
-        self.l2r_map: Dict[int, List[int]] = {}
-        self.r2l_map: Dict[int, List[int]] = {}
+        self.l2r_map: Dict[int, int] = {}
+        self.r2l_map: Dict[int, int] = {}
 
         self.up_map: Dict[int, List[int]] = {}
         self.dn_map: Dict[int, List[int]] = {}
@@ -124,7 +124,7 @@ class ReadingOrderPredictor:
         for i, elem in enumerate(sorted_elements):
             page_nos.add(elem.page_no)
 
-        page_to_elems: Dict[int, List[int]] = {}
+        page_to_elems: Dict[int, List[PageElement]] = {}
         for page_no in page_nos:
             page_to_elems[page_no] = []
 
@@ -151,7 +151,7 @@ class ReadingOrderPredictor:
         for i, elem in enumerate(sorted_elements):
             page_nos.add(elem.page_no)
 
-        page_to_elems: Dict[int, List[int]] = {}
+        page_to_elems: Dict[int, List[PageElement]] = {}
         for page_no in page_nos:
             page_to_elems[page_no] = []
 
@@ -223,7 +223,7 @@ class ReadingOrderPredictor:
         """
 
         for i, elem in enumerate(page_elements):
-            page_elements[i] = elem.to_bottom_left_origin(
+            page_elements[i] = elem.to_bottom_left_origin(  # type: ignore
                 page_height=page_elements[i].page_size.height
             )
 
@@ -349,7 +349,7 @@ class ReadingOrderPredictor:
                         i_above_w: bool = pelem_i.is_strictly_above(pelem_w)
                         w_above_j: bool = pelem_w.is_strictly_above(pelem_j)
 
-                        is_i_just_above_j: bool = not (i_above_w and w_above_j)
+                        is_i_just_above_j = not (i_above_w and w_above_j)
 
                 if is_i_just_above_j:
 
