@@ -76,7 +76,7 @@ class ReadingOrderPredictor:
 
         for i, elem in enumerate(page_elements):
             page_nos.add(elem.page_no)
-            
+
         page_to_elems: Dict[int, List[PageElement]] = {}
         page_to_headers: Dict[int, List[PageElement]] = {}
         page_to_footers: Dict[int, List[PageElement]] = {}
@@ -538,7 +538,7 @@ class ReadingOrderPredictor:
                         to_captions[cid_j] = [cid_i]
                     elif cid_i not in to_captions[cid_j]:
                         to_captions[cid_j].append(cid_i)
-                    #to_captions[cid_j] = [cid_i]
+                    # to_captions[cid_j] = [cid_i]
 
                     assigned_cids.add(cid_j)
 
@@ -549,10 +549,8 @@ class ReadingOrderPredictor:
                         to_captions[cid_j] = [cid_i]
                     elif cid_i not in to_captions[cid_j]:
                         to_captions[cid_j].append(cid_i)
-                    #to_captions[cid_j] = [cid_i]
+                    # to_captions[cid_j] = [cid_i]
                     assigned_cids.add(cid_j)
-
-
 
         for cid_i, to_item in from_captions.items():
             # To avoid changing the size of from_captions[cid_i][0] while iterating...
@@ -562,12 +560,12 @@ class ReadingOrderPredictor:
             for cid_j in from_captions[cid_i][0]:
                 if cid_j in assigned_cids:
                     preceding_to_remove.add(cid_j)
-                    #from_captions[cid_i][0].remove(cid_j)
+                    # from_captions[cid_i][0].remove(cid_j)
 
             for cid_j in from_captions[cid_i][1]:
                 if cid_j in assigned_cids:
                     following_to_remove.add(cid_j)
-                    #from_captions[cid_i][1].remove(cid_j)
+                    # from_captions[cid_i][1].remove(cid_j)
 
             for num in preceding_to_remove:
                 from_captions[cid_i][0].remove(num)
@@ -594,7 +592,11 @@ class ReadingOrderPredictor:
             used = set()
             result = {}
             for key, values in sorted(mapping.items()):
-                valid = [v for v in sorted(values, key=lambda v: abs(v - key)) if v not in used]
+                valid = [
+                    v
+                    for v in sorted(values, key=lambda v: abs(v - key))
+                    if v not in used
+                ]
                 if valid:
                     result[key] = [valid[0]]
                     used.add(valid[0])
