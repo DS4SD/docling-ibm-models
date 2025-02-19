@@ -3,12 +3,12 @@
 # SPDX-License-Identifier: MIT
 #
 import logging
-from typing import List, Union
+from typing import List, Optional, Union
 
 import numpy as np
 import torch
 from PIL import Image
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, StoppingCriteria, StoppingCriteriaList
 
 from docling_ibm_models.code_formula_model.models.sam_opt import SamOPTForCausalLM
 from docling_ibm_models.code_formula_model.models.sam_opt_image_processor import (
@@ -16,6 +16,22 @@ from docling_ibm_models.code_formula_model.models.sam_opt_image_processor import
 )
 
 _log = logging.getLogger(__name__)
+
+
+class StopOnString(StoppingCriteria):
+    def __init__(self, tokenizer, stop_string):
+        self.stop_token_ids = tokenizer.encode(stop_string, add_special_tokens=False)
+
+    def __call__(self, input_ids, scores, **kwargs):
+        for sequence in input_ids:
+            sequence_list = sequence.tolist()
+            for i in range(len(sequence_list) - len(self.stop_token_ids) + 1):
+                if (
+                    sequence_list[i : i + len(self.stop_token_ids)]
+                    == self.stop_token_ids
+                ):
+                    return True
+        return False
 
 
 class CodeFormulaPredictor:
@@ -127,12 +143,37 @@ class CodeFormulaPredictor:
 
         return prompt
 
+    def _strip(self, text: str):
+        """
+        Removes any occurrences of the substrings in remove_list from the end of text.
+
+        Parameters
+        ----------
+        text : str
+            The original string.
+
+        Returns
+        -------
+        str
+            The trimmed string.
+        """
+        remove_list = [r"\quad", r"\\", r"\,", " c c c c", " l l l l l"]
+        changed = True
+        while changed:
+            changed = False
+            for substr in remove_list:
+                if text.endswith(substr):
+                    text = text[: -len(substr)]
+                    changed = True
+
+        return text.strip()
+
     @torch.inference_mode()
     def predict(
         self,
         images: List[Union[Image.Image, np.ndarray]],
         labels: List[str],
-        temperature: float = 0.1,
+        temperature: Optional[float] = 0.0,
     ) -> List[str]:
         """
         Predicts the textual representation of input images (code or LaTeX).
@@ -143,8 +184,8 @@ class CodeFormulaPredictor:
             List of images to be processed, provided as PIL Image objects or numpy arrays.
         labels : List[str]
             List of labels indicating the type of each image ('code' or 'formula').
-        temperature : float, optional
-            Sampling temperature for generation, by default set to 0.1.
+        temperature : Optional[float]
+            Sampling temperature for generation, by default set to 0.0.
 
         Returns
         -------
@@ -159,7 +200,11 @@ class CodeFormulaPredictor:
         Excpetion
             In case the temperature is an invalid number.
         """
-        if (type(temperature) != float and type(temperature) != int) or temperature < 0:
+        if (
+            temperature is None
+            or not (isinstance(temperature, float) or isinstance(temperature, int))
+            or temperature < 0
+        ):
             raise Exception("Temperature must be a number greater or equal to 0.")
 
         do_sample = True
@@ -181,11 +226,10 @@ class CodeFormulaPredictor:
             else:
                 raise TypeError("Not supported input image format")
             images_tmp.append(image)
-        images = images_tmp
 
-        images_tensor = torch.stack([self._image_processor(img) for img in images]).to(
-            self._device
-        )
+        images_tensor = torch.stack(
+            [self._image_processor(img) for img in images_tmp]
+        ).to(self._device)
 
         prompts = [self._get_prompt(label) for label in labels]
 
@@ -194,6 +238,16 @@ class CodeFormulaPredictor:
 
         prompt_ids = tokenized["input_ids"]
         attention_mask = tokenized["attention_mask"]
+
+        stopping_criteria = StoppingCriteriaList(
+            [
+                StopOnString(self._tokenizer, r" \quad \quad \quad \quad"),
+                StopOnString(self._tokenizer, r" \\ \\ \\ \\"),
+                StopOnString(self._tokenizer, r" \, \, \, \,"),
+                StopOnString(self._tokenizer, r" c c c c c c c c c c c c c c c c"),
+                StopOnString(self._tokenizer, r" l l l l l l l l l l l l l l l l l"),
+            ]
+        )
 
         if self._device == "cpu":
             output_ids_list = self._model.generate(
@@ -204,6 +258,8 @@ class CodeFormulaPredictor:
                 temperature=temperature,
                 max_new_tokens=4096 - prompt_ids.shape[1],
                 use_cache=True,
+                no_repeat_ngram_size=200,
+                stopping_criteria=stopping_criteria,
             )
         else:
             with torch.autocast(device_type=self._device, dtype=torch.bfloat16):
@@ -214,10 +270,13 @@ class CodeFormulaPredictor:
                     temperature=temperature,
                     max_new_tokens=4096 - prompt_ids.shape[1],
                     use_cache=True,
+                    no_repeat_ngram_size=200,
+                    stopping_criteria=stopping_criteria,
                 )
 
         outputs = self._tokenizer.batch_decode(
             output_ids_list[:, prompt_ids.shape[1] :], skip_special_tokens=True
         )
+        outputs = [self._strip(output) for output in outputs]
 
         return outputs

@@ -36,7 +36,7 @@ class PositionalEncoding(nn.Module):
 
 
 class TMTransformerDecoder(nn.TransformerDecoder):
-    def forward(
+    def forward(  # type: ignore
         self,
         tgt: Tensor,
         memory: Optional[Tensor] = None,
@@ -69,11 +69,11 @@ class TMTransformerDecoder(nn.TransformerDecoder):
         else:
             out_cache = torch.stack(tag_cache, dim=0)
 
-        return output, out_cache
+        return output, out_cache  # type: ignore
 
 
 class TMTransformerDecoderLayer(nn.TransformerDecoderLayer):
-    def forward(
+    def forward(  # type: ignore
         self,
         tgt: Tensor,
         memory: Optional[Tensor] = None,

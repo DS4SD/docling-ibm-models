@@ -37,7 +37,7 @@ def init() -> dict:
     }
 
     # Download models from HF
-    artifact_path = snapshot_download(repo_id="ds4sd/CodeFormula", revision="v1.0.0")
+    artifact_path = snapshot_download(repo_id="ds4sd/CodeFormula", revision="v1.0.1")
     
     init["artifact_path"] = artifact_path
 
@@ -90,6 +90,16 @@ def test_code_formula_predictor(init: dict):
         is_exception = True
     assert is_exception
 
+    # wrong value for temperature
+    is_exception = False
+    try:
+        dummy_image = Image.new(mode="RGB", size=(100, 100), color=(255, 255, 255))
+        for _ in code_formula_predictor.predict([dummy_image], ["label"], None):
+            pass
+    except Exception:
+        is_exception = True
+    assert is_exception
+
     # mistmatched number of images and labels
     is_exception = False
     try:
@@ -112,7 +122,7 @@ def test_code_formula_predictor(init: dict):
 
             output = code_formula_predictor.predict([img], [label], temperature)
             output = output[0]
-            
+
             assert output == gt
 
             # Load images as numpy arrays

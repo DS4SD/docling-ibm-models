@@ -1,3 +1,17 @@
+## [v3.3.2](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.3.2) - 2025-02-13
+
+### Fix
+
+* Update Pillow constraints ([#80](https://github.com/DS4SD/docling-ibm-models/issues/80)) ([`4fa1828`](https://github.com/DS4SD/docling-ibm-models/commit/4fa18280b0f9e56af15fac77be98af7be7cec3b3))
+
+## [v3.3.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.3.1) - 2025-02-06
+
+### Fix
+
+* Performance issue code formula model ([#78](https://github.com/DS4SD/docling-ibm-models/issues/78)) ([`b78d81f`](https://github.com/DS4SD/docling-ibm-models/commit/b78d81fe1ef605024785da6f39276d9d61f48c1f))
+* Upgrade to code formula model v1.0.1 ([#75](https://github.com/DS4SD/docling-ibm-models/issues/75)) ([`d6a3549`](https://github.com/DS4SD/docling-ibm-models/commit/d6a354918145d9900ff7f05a5b4fc17bab1b31c2))
+* Enable MyPy in pre-commit and refactor the code to fix all errors ([#74](https://github.com/DS4SD/docling-ibm-models/issues/74)) ([`a47673b`](https://github.com/DS4SD/docling-ibm-models/commit/a47673b9f3362868852d71792744684bd9c938a2))
+
 ## [v3.3.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.3.0) - 2025-01-24
 
 ### Feature

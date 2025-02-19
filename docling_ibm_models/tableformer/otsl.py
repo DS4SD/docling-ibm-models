@@ -11,7 +11,7 @@ import docling_ibm_models.tableformer.settings as s
 LOG_LEVEL = logging.INFO
 # LOG_LEVEL = logging.DEBUG
 logger = s.get_custom_logger("consolidate", LOG_LEVEL)
-png_files = {}  # Evaluation files
+# png_files = {}  # Evaluation files
 total_pics = 0
 
 
