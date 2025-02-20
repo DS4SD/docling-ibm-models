@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 #
 import os
+import json
 from pathlib import Path
 
 import torch
@@ -71,7 +72,10 @@ def test_layoutpredictor(init: dict):
 
     # Predict on the test image
     for img_fn in init["test_imgs"]:
+        
+        true_layout_fn = img_fn+".json"
         with Image.open(img_fn) as img:
+
             w, h = img.size
 
             # Load images as PIL objects
@@ -81,8 +85,20 @@ def test_layoutpredictor(init: dict):
                 assert pred["t"] >= 0 and pred["t"] <= h
                 assert pred["r"] >= 0 and pred["r"] <= w
                 assert pred["b"] >= 0 and pred["b"] <= h
+
             assert i + 1 == init["pred_bboxes"]
 
+            if os.path.exists(true_layout_fn):
+                with open(true_layout_fn, "r") as fr:
+                    true_layout = json.load(fr)
+
+            """
+                # FIXME: write a simple test to check all objects are found
+            else:
+                with open(true_layout_fn, "w") as fw:
+                    fw.write(json.dumps(pred_layout, indent=4))
+            """
+            
             # Load images as numpy arrays
             np_arr = np.asarray(img)
             for i, pred in enumerate(lpredictor.predict(np_arr)):
