@@ -22,7 +22,7 @@ import random
 
 from docling_ibm_models.reading_order.reading_order_rb import PageElement, ReadingOrderPredictor
 
-from docling_core.types.doc.document import DoclingDocument, DocItem, RefItem, TextItem
+from docling_core.types.doc.document import DoclingDocument, DocItem, RefItem, TextItem, ContentLayer
 
 # Configure logging
 logging.basicConfig(
@@ -80,7 +80,7 @@ def test_readingorder():
         to_ref: Dict[int, str] = {}
         from_ref: Dict[str, int] = {}
         
-        for item, level in true_doc.iterate_items():
+        for item, level in true_doc.iterate_items(included_content_layers={ContentLayer.BODY, ContentLayer.FURNITURE}):
             if isinstance(item, DocItem):
                 for prov in item.prov:
 
@@ -145,14 +145,6 @@ def test_readingorder():
                         "doc_a0edae1fa147c7bb78ebc493743a68ba4372b5ead31f2a2b146c35119462379e_page_000001.png",
                         "doc_94ba5468fcb6277721947697048846dc0d0551296be3b45f5918ab857d21dcc7_page_000001.png",
                         "doc_cbb4a13ffd01d9f777fdb939451d6a21cea1b869ee50d79581451e3601df9ec8_page_000001.png"]:
-                        # FIXME: The following files and more newly fail the score treshold:
-                        #"doc_00f0adaaa8358a28b4b4e83bc97dcd83a01f7283605b140c2be8e8d47bba8b6b_page_000001.png",
-                        #"doc_f3e3d62292122d9be48e262e7d8e1f9363bab000e26437ffb6f2f94afc3c2294_page_000001.png",
-                        #"doc_d2773d8fcd2f2b18b6bd0b2952ba8dd56702e1f738a4f8a7b1e0e03c9cad9dba_page_000001.png",
-                        #"doc_1a5c949c602fb587c39618443a00915582b2d20a32f959e5d3f4f3fc99ab9db5_page_000001.png",
-                        #"doc_00f0adaaa8358a28b4b4e83bc97dcd83a01f7283605b140c2be8e8d47bba8b6b_page_000001.png",
-                        #"doc_d276ca9a5ecb8d6d11359f515e50c8f78395548de4e3e2c49e38f5500ee40ebe_page_000001.png",
-                        #"doc_934fbf534914863f6431eef38f5bf66fa91afd439ddf20fb1af0cf3225159ac1_page_000001.png"]:
             # print(f"{os.path.basename(filename)}: {score}")
             assert score>=0.60, f"reading-order score={score}>0.60"            
         else:
