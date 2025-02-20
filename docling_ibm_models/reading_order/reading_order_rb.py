@@ -512,6 +512,7 @@ class ReadingOrderPredictor:
                 while ind_m1 >= 0 and page_elements[ind_m1].label in [
                     DocItemLabel.TABLE,
                     DocItemLabel.PICTURE,
+                    DocItemLabel.CODE,
                 ]:
                     from_captions[page_element.cid][0].append(page_elements[ind_m1].cid)
                     ind_m1 = ind_m1 - 1
@@ -520,6 +521,7 @@ class ReadingOrderPredictor:
                 while ind_p1 < len(page_elements) and page_elements[ind_p1].label in [
                     DocItemLabel.TABLE,
                     DocItemLabel.PICTURE,
+                    DocItemLabel.CODE,
                 ]:
                     from_captions[page_element.cid][1].append(page_elements[ind_p1].cid)
                     ind_p1 = ind_p1 + 1
