@@ -39,7 +39,7 @@ opencv-python-headless = "^4.6.0.66"
 huggingface_hub = ">=0.23,<1"
 safetensors = {version=">=0.4.3,<1", extras=["torch"]}
 pydantic = "^2.0.0"
-docling-core = "^2.16.0"
+docling-core = "^2.19.0"
 
 [tool.poetry.group.dev.dependencies]
 black = {extras = ["jupyter"], version = "^24.4.2"}
