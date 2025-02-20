@@ -1,3 +1,13 @@
+## [v3.4.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.4.0) - 2025-02-20
+
+### Feature
+
+* Add readingorder model ([#44](https://github.com/DS4SD/docling-ibm-models/issues/44)) ([`23c1696`](https://github.com/DS4SD/docling-ibm-models/commit/23c1696716d5d48d44ca2697232edd939cf3d25c))
+
+### Fix
+
+* Add CodeItem to caption linking algorithm in reading-order-model ([#81](https://github.com/DS4SD/docling-ibm-models/issues/81)) ([`c3b53a5`](https://github.com/DS4SD/docling-ibm-models/commit/c3b53a52bea8fcdd06d046b71fb42e2202a4635d))
+
 ## [v3.3.2](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.3.2) - 2025-02-13
 
 ### Fix
