@@ -1,6 +1,7 @@
+env:
+  PYTHONDEVMODE: 1
 on:
   workflow_call:
-
 jobs:
   run-checks:
     runs-on: ubuntu-latest
