@@ -1,3 +1,9 @@
+## [v3.4.1](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.4.1) - 2025-02-28
+
+### Fix
+
+* Remove regex warning in reading_order model ([#84](https://github.com/DS4SD/docling-ibm-models/issues/84)) ([`e22095b`](https://github.com/DS4SD/docling-ibm-models/commit/e22095be92021ea7b546ac98252a9380bb61d0be))
+
 ## [v3.4.0](https://github.com/DS4SD/docling-ibm-models/releases/tag/v3.4.0) - 2025-02-20
 
 ### Feature
