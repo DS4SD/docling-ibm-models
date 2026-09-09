@@ -49,3 +49,13 @@ def test_predict_merges_does_not_join_unrelated_list_items(
     ]
 
     assert ReadingOrderPredictor().predict_merges(elements) == {}
+
+
+def test_predict_merges_uses_current_fragment_for_chained_spatial_checks() -> None:
+    elements = [
+        _list_item(0, "1. Understand the algo-", 0, 40),
+        _list_item(1, "rith-", 60, 100),
+        _list_item(2, "ms embedded in clinical devices.", 20, 50),
+    ]
+
+    assert ReadingOrderPredictor().predict_merges(elements) == {0: [1]}
